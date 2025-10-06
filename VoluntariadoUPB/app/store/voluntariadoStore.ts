@@ -16,7 +16,7 @@ export interface Voluntariado {
   beneficios: string[];
 }
 
-interface VoluntariadoState {
+type VoluntariadoState = {
   voluntariados: Voluntariado[];
   voluntariadoSeleccionado: Voluntariado | null;
   isLoading: boolean;
@@ -24,7 +24,7 @@ interface VoluntariadoState {
   setVoluntariadoSeleccionado: (voluntariado: Voluntariado | null) => void;
   setIsLoading: (isLoading: boolean) => void;
   getVoluntariadoById: (id: string) => Voluntariado | undefined;
-}
+};
 
 
 const mockVoluntariados: Voluntariado[] = [
