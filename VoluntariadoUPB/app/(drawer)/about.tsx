@@ -80,30 +80,6 @@ export default function AboutScreen() {
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.comingSoonBadge, { color: colors.primary }]}>
-          🚧 Próximamente
-        </Text>
-        <Text style={[styles.text, { color: colors.subtitle }]}>
-          Estamos trabajando en nuevas características para mejorar tu experiencia:
-        </Text>
-        
-        <View style={styles.comingSoonList}>
-          <Text style={[styles.comingSoonItem, { color: colors.subtitle }]}>
-            • Notificaciones push para nuevas oportunidades
-          </Text>
-          <Text style={[styles.comingSoonItem, { color: colors.subtitle }]}>
-            • Sistema de certificados digitales
-          </Text>
-          <Text style={[styles.comingSoonItem, { color: colors.subtitle }]}>
-            • Historial completo de voluntariados
-          </Text>
-          <Text style={[styles.comingSoonItem, { color: colors.subtitle }]}>
-            • Compartir experiencias con la comunidad
-          </Text>
-        </View>
-      </View>
-
       <View style={[styles.footer, { backgroundColor: colors.surface }]}>
         <Text style={[styles.version, { color: colors.subtitle }]}>
           Versión 1.0.0 - MVP
