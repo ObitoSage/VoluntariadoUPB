@@ -16,7 +16,7 @@ const { colors } = useThemeColors();
         headerShadowVisible: false,
     }}
     >
-    <Stack.Screen name="index" options={{ title: 'Mis Postulaciones' }} />
+    <Stack.Screen name="index" options={{ title: 'Mis Postulaciones', headerShown: false }} />
     </Stack>
 );
 };

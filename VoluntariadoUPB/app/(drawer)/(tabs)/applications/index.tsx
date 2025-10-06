@@ -33,7 +33,6 @@ const styles = React.useMemo(() => createStyles(colors), [colors]);
 
     return (
     <View style={styles.container}>
-    <Stack.Screen options={{ title: 'Mis Postulaciones' }} />
     <Text style={styles.title}>Mis Postulaciones</Text>
     <Text style={styles.copy}>Aquí aparecerán tus postulaciones a voluntariados.</Text>
     </View>

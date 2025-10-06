@@ -16,7 +16,7 @@ const { colors } = useThemeColors();
         headerShadowVisible: false,
     }}
     >
-    <Stack.Screen name="index" options={{ title: 'Perfil' }} />
+    <Stack.Screen name="index" options={{ title: 'Perfil', headerShown: false }} />
     </Stack>
 );
 };

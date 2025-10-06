@@ -54,7 +54,7 @@ export default function OportunidadesListScreen() {
 
   const handleVoluntariadoPress = (voluntariado: Voluntariado) => {
     setVoluntariadoSeleccionado(voluntariado);
-    router.push(`/oportunidades/${voluntariado.id}`);
+    router.push(`/opportunities/${voluntariado.id}`);
   };
 
   const getCategoryColor = (categoria: string) => {

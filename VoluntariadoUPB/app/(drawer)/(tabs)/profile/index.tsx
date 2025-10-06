@@ -33,7 +33,6 @@ const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 return (
     <View style={styles.container}>
-    <Stack.Screen options={{ title: 'Perfil' }} />
     <Text style={styles.title}>Perfil de Usuario</Text>
     <Text style={styles.copy}>Gestiona tu información personal y preferencias.</Text>
     </View>
