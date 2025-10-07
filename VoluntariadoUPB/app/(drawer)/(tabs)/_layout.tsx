@@ -44,7 +44,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="applications"
         options={{
-          title: 'Mis Postulaciones',
+          title: 'Postulaciones',
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={size} color={color} />
           ),
