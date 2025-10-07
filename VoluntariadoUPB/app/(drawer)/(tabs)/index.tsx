@@ -217,6 +217,8 @@ StyleSheet.create({
     },
 });
 
+type CarouselImageSource = ReturnType<typeof require>;
+
 const InicioScreen = () => {
 const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
@@ -229,7 +231,7 @@ const oportunidadesDisponibles = voluntariados.filter(
     v => v.participantesActuales < v.participantesMaximos
 ).length;
 
-const carouselImages = [
+const carouselImages: CarouselImageSource[] = [
     require('../../../assets/Mensaje/Mensaje1.jpeg'),
     require('../../../assets/Mensaje/Mensaje2.jpeg'),
     require('../../../assets/Mensaje/Mensaje3.jpeg'),
@@ -241,13 +243,20 @@ const carouselImages = [
     require('../../../assets/Mensaje/Mensaje9.jpeg'),
 ];
 
-const getWeekDays = () => {
+type WeekDay = {
+    number: number;
+    hasEvent: boolean;
+    isToday: boolean;
+    eventType: 'pets' | 'general';
+};
+
+const getWeekDays = (): WeekDay[] => {
     const today = new Date();
     const currentDay = today.getDay();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - currentDay);
 
-    const weekDays = [];
+    const weekDays: WeekDay[] = [];
 
     for (let i = 0; i < 7; i++) {
     const day = new Date(startOfWeek);
@@ -268,13 +277,13 @@ const getWeekDays = () => {
 
 const weekDays = getWeekDays();
 
-const renderCarouselItem = ({ item, index }: { item: any; index: number }) => (
+const renderCarouselItem = ({ item, index }: { item: CarouselImageSource; index: number }) => (
     <View style={styles.carouselItem}>
     <Image source={item} style={styles.carouselImage} />
     </View>
 );
 
-const onCarouselScroll = (event: any) => {
+const onCarouselScroll = (event: { nativeEvent: { contentOffset: { x: number } } }) => {
     const slideSize = screenWidth - 48;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentImageIndex(index);

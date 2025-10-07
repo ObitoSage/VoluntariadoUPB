@@ -11,7 +11,7 @@ FlatList
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../hooks/useThemeColors';
-import { useVoluntariadoStore } from '../../../store/voluntariadoStore';
+import { useVoluntariadoStore, type Application } from '../../../store/voluntariadoStore';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -265,44 +265,7 @@ const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
 const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'inReview'>('all');
 
-const applications = [
-    {
-    id: '1',
-    title: 'Ayuda Comunitaria en Zona Sur',
-    organization: 'Fundación Esperanza',
-    applicationDate: '15 Nov 2024',
-    status: 'pending' as const,
-    location: 'La Paz, Bolivia',
-    description: 'Apoyo en actividades educativas para niños en situación vulnerable',
-    },
-    {
-    id: '2',
-    title: 'Reforestación Parque Nacional',
-    organization: 'EcoBolivia',
-    applicationDate: '10 Nov 2024',
-    status: 'accepted' as const,
-    location: 'Cochabamba, Bolivia',
-    description: 'Plantación de árboles nativos en áreas degradadas',
-    },
-    {
-    id: '3',
-    title: 'Asistencia Médica Rural',
-    organization: 'Médicos Sin Fronteras',
-    applicationDate: '8 Nov 2024',
-    status: 'inReview' as const,
-    location: 'Santa Cruz, Bolivia',
-    description: 'Apoyo en campañas de salud preventiva en comunidades rurales',
-    },
-    {
-    id: '4',
-    title: 'Educación Digital',
-    organization: 'TechForGood',
-    applicationDate: '5 Nov 2024',
-    status: 'rejected' as const,
-    location: 'La Paz, Bolivia',
-    description: 'Enseñanza de habilidades digitales básicas a adultos mayores',
-    },
-];
+const applications = useVoluntariadoStore((state) => state.applications);
 
 const filters = [
     { key: 'all', title: 'Todas', count: applications.length },
@@ -346,7 +309,7 @@ const getStatusLabel = (status: string) => {
     }
 };
 
-const renderApplicationCard = ({ item }: { item: any }) => (
+const renderApplicationCard = ({ item }: { item: Application }) => (
     <View style={styles.applicationCard}>
     <View style={styles.applicationHeader}>
         <Text style={styles.applicationTitle}>{item.title}</Text>
