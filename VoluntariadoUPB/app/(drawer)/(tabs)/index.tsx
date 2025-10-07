@@ -7,6 +7,7 @@ View,
 TouchableOpacity, 
 ScrollView, 
 Image, 
+ImageBackground,
 Dimensions,
 FlatList 
 } from 'react-native';
@@ -42,103 +43,169 @@ StyleSheet.create({
     color: colors.subtitle,
     lineHeight: 22,
     },
-    statsSection: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-    },
     sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
     },
-    statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
+    bannerSection: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    height: 180,
     },
-    statCard: {
-    flex: 1,
+    bannerBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    },
+    bannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.primary + 'CC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    },
+    bannerText: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    lineHeight: 34,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    },
+    bannerSubtext: {
+    fontSize: 16,
+    color: '#ffffff',
+    textAlign: 'center',
+    marginTop: 8,
+    opacity: 0.95,
+    },
+    progressSection: {
+    marginHorizontal: 24,
+    marginBottom: 24,
     backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 4,
     },
-    statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.primary,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    },
+    progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    },
+    progressIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    },
+    progressTextContainer: {
+    flex: 1,
+    },
+    progressTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
     marginBottom: 4,
     },
-    statLabel: {
+    progressSubtitle: {
     fontSize: 14,
     color: colors.subtitle,
-    textAlign: 'center',
     },
-    calendarSection: {
-    paddingHorizontal: 24,
+    progressBar: {
+    height: 8,
+    backgroundColor: colors.muted + '30',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginTop: 12,
+    },
+    progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+    },
+    nextActivitySection: {
+    marginHorizontal: 24,
     marginBottom: 24,
     },
-    monthHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 16,
-    textAlign: 'center',
-    },
-    weekContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    },
-    dayCard: {
-    flex: 1,
+    nextActivityCard: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    height: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    padding: 20,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
-    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 4,
     },
-    dayCardWithEvent: {
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    },
+    nextActivityIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary + '20',
-    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
     },
-    dayNumber: {
+    nextActivityContent: {
+    flex: 1,
+    },
+    nextActivityLabel: {
+    fontSize: 12,
+    color: colors.subtitle,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+    },
+    nextActivityTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 4,
     },
-    dayNumberWithEvent: {
+    nextActivityTime: {
+    fontSize: 14,
     color: colors.primary,
-    },
-    eventEmoji: {
-    fontSize: 12,
-    marginTop: 2,
+    fontWeight: '500',
     },
     carouselSection: {
     marginBottom: 32,
     },
     carouselHeader: {
     paddingHorizontal: 24,
-    marginBottom: 16,
+    marginBottom: 20,
     },
     carouselTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 12,
-    },
-    carouselDescription: {
-    fontSize: 15,
-    color: colors.subtitle,
-    lineHeight: 22,
-    textAlign: 'center',
+    marginBottom: 8,
     },
     carouselContainer: {
     height: 280,
@@ -183,6 +250,14 @@ StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
     },
     coordinatorImage: {
     width: 100,
@@ -224,13 +299,6 @@ const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-const voluntariados = useVoluntariadoStore((state) => state.voluntariados);
-
-const totalOportunidades = voluntariados.length;
-const oportunidadesDisponibles = voluntariados.filter(
-    v => v.participantesActuales < v.participantesMaximos
-).length;
-
 const carouselImages: CarouselImageSource[] = [
     require('../../../assets/Mensaje/Mensaje1.jpeg'),
     require('../../../assets/Mensaje/Mensaje2.jpeg'),
@@ -243,39 +311,16 @@ const carouselImages: CarouselImageSource[] = [
     require('../../../assets/Mensaje/Mensaje9.jpeg'),
 ];
 
-type WeekDay = {
-    number: number;
-    hasEvent: boolean;
-    isToday: boolean;
-    eventType: 'pets' | 'general';
+const userProgress = {
+    completedActivities: 3,
+    totalActivities: 10,
+    monthlyGoal: 5,
 };
 
-const getWeekDays = (): WeekDay[] => {
-    const today = new Date();
-    const currentDay = today.getDay();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - currentDay);
-
-    const weekDays: WeekDay[] = [];
-
-    for (let i = 0; i < 7; i++) {
-    const day = new Date(startOfWeek);
-    day.setDate(startOfWeek.getDate() + i);
-    
-    const dayNumber = day.getDate();
-    const hasEvent = dayNumber === 10 || dayNumber === 8 || dayNumber === 12;
-
-    weekDays.push({
-        number: dayNumber,
-        hasEvent,
-        isToday: day.toDateString() === today.toDateString(),
-        eventType: dayNumber === 10 ? 'pets' : 'general',
-    });
-    }
-    return weekDays;
+const nextActivity = {
+    title: 'Limpieza del campus',
+    daysUntil: 2,
 };
-
-const weekDays = getWeekDays();
 
 const renderCarouselItem = ({ item, index }: { item: CarouselImageSource; index: number }) => (
     <View style={styles.carouselItem}>
@@ -302,53 +347,66 @@ return (
         </Text>
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-        <Text style={styles.sectionTitle}>Estadísticas</Text>
-        <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{totalOportunidades}</Text>
-            <Text style={styles.statLabel}>Total{'\n'}Oportunidades</Text>
+        {/* Inspirational Banner Section */}
+        <View style={styles.bannerSection}>
+        <ImageBackground
+            source={require('../../../assets/Voluntariado.png')}
+            style={styles.bannerBackground}
+            resizeMode="cover"
+        >
+            <View style={styles.bannerOverlay}>
+            <Text style={styles.bannerText}>Pequeñas acciones{'\n'}grandes cambios</Text>
+            <Text style={styles.bannerSubtext}>Gracias por ser parte del cambio </Text>
             </View>
-            <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{oportunidadesDisponibles}</Text>
-            <Text style={styles.statLabel}>Disponibles{'\n'}Ahora</Text>
+        </ImageBackground>
+        </View>
+
+        {/* Personal Progress Section */}
+        <View style={styles.progressSection}>
+        <View style={styles.progressHeader}>
+            <View style={styles.progressIcon}>
+            <Ionicons name="trophy" size={24} color={colors.primary} />
             </View>
+            <View style={styles.progressTextContainer}>
+            <Text style={styles.progressTitle}>
+                Has participado en {userProgress.completedActivities} voluntariados este mes 
+            </Text>
+            <Text style={styles.progressSubtitle}>
+                Meta: {userProgress.monthlyGoal} actividades
+            </Text>
+            </View>
+        </View>
+        <View style={styles.progressBar}>
+            <View 
+            style={[
+                styles.progressBarFill, 
+                { width: `${(userProgress.completedActivities / userProgress.monthlyGoal) * 100}%` }
+            ]} 
+            />
         </View>
         </View>
 
-        {/* Calendar Section */}
-        <View style={styles.calendarSection}>
-        <Text style={styles.sectionTitle}>Octubre 2025</Text>
-        <View style={styles.weekContainer}>
-            {weekDays.map((day, index) => (
-            <View
-                key={index}
-                style={[
-                styles.dayCard,
-                day.hasEvent && styles.dayCardWithEvent,
-                ]}
-            >
-                <Text style={[
-                styles.dayNumber,
-                day.hasEvent && styles.dayNumberWithEvent,
-                ]}>{day.number}</Text>
-                {day.hasEvent && day.eventType === 'pets' && (
-                <Text style={styles.eventEmoji}>🐾</Text>
-                )}
+        {/* Next Activity Section */}
+        <View style={styles.nextActivitySection}>
+        <Text style={styles.sectionTitle}>Próxima Actividad</Text>
+        <View style={styles.nextActivityCard}>
+            <View style={styles.nextActivityIcon}>
+            <Ionicons name="calendar" size={28} color={colors.primary} />
             </View>
-            ))}
+            <View style={styles.nextActivityContent}>
+            <Text style={styles.nextActivityLabel}>Próximamente</Text>
+            <Text style={styles.nextActivityTitle}>{nextActivity.title}</Text>
+            <Text style={styles.nextActivityTime}>
+                En {nextActivity.daysUntil} días
+            </Text>
+            </View>
         </View>
         </View>
 
         {/* Carousel Section */}
         <View style={styles.carouselSection}>
         <View style={styles.carouselHeader}>
-            <Text style={styles.carouselTitle}>PARTICIPAR EN VOLUNTARIADOS ES...</Text>
-            <Text style={styles.carouselDescription}>
-            Una experiencia sumamente enriquecedora que va mucho más allá de simplemente ayudar a otros. 
-            Te aporta una serie de beneficios en múltiples aspectos de tu vida.
-            </Text>
+            <Text style={styles.carouselTitle}>Impacto del Voluntariado</Text>
         </View>
         
         <FlatList
