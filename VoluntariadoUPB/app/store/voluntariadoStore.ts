@@ -16,12 +16,24 @@ export interface Voluntariado {
   beneficios: string[];
 }
 
+export interface Application {
+  id: string;
+  title: string;
+  organization: string;
+  applicationDate: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'inReview';
+  location: string;
+  description: string;
+}
+
 type VoluntariadoState = {
   voluntariados: Voluntariado[];
   voluntariadoSeleccionado: Voluntariado | null;
+  applications: Application[];
   isLoading: boolean;
   setVoluntariados: (voluntariados: Voluntariado[]) => void;
   setVoluntariadoSeleccionado: (voluntariado: Voluntariado | null) => void;
+  setApplications: (applications: Application[]) => void;
   setIsLoading: (isLoading: boolean) => void;
   getVoluntariadoById: (id: string) => Voluntariado | undefined;
 };
@@ -168,15 +180,57 @@ const mockVoluntariados: Voluntariado[] = [
   },
 ];
 
+const mockApplications: Application[] = [
+  {
+    id: '1',
+    title: 'Ayuda Comunitaria en Zona Sur',
+    organization: 'Fundación Esperanza',
+    applicationDate: '15 Nov 2024',
+    status: 'pending',
+    location: 'La Paz, Bolivia',
+    description: 'Apoyo en actividades educativas para niños en situación vulnerable',
+  },
+  {
+    id: '2',
+    title: 'Reforestación Parque Nacional',
+    organization: 'EcoBolivia',
+    applicationDate: '10 Nov 2024',
+    status: 'accepted',
+    location: 'Cochabamba, Bolivia',
+    description: 'Plantación de árboles nativos en áreas degradadas',
+  },
+  {
+    id: '3',
+    title: 'Asistencia Médica Rural',
+    organization: 'Médicos Sin Fronteras',
+    applicationDate: '8 Nov 2024',
+    status: 'inReview',
+    location: 'Santa Cruz, Bolivia',
+    description: 'Apoyo en campañas de salud preventiva en comunidades rurales',
+  },
+  {
+    id: '4',
+    title: 'Educación Digital',
+    organization: 'TechForGood',
+    applicationDate: '5 Nov 2024',
+    status: 'rejected',
+    location: 'La Paz, Bolivia',
+    description: 'Enseñanza de habilidades digitales básicas a adultos mayores',
+  },
+];
+
 export const useVoluntariadoStore = create<VoluntariadoState>((set, get) => ({
   voluntariados: mockVoluntariados,
   voluntariadoSeleccionado: null,
+  applications: mockApplications,
   isLoading: false,
   
   setVoluntariados: (voluntariados) => set({ voluntariados }),
   
   setVoluntariadoSeleccionado: (voluntariado) => 
     set({ voluntariadoSeleccionado: voluntariado }),
+  
+  setApplications: (applications) => set({ applications }),
   
   setIsLoading: (isLoading) => set({ isLoading }),
   
