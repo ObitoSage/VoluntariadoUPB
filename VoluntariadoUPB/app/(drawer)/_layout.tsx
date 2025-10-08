@@ -58,6 +58,17 @@ export default function DrawerLayout() {
           ),
         }}
       />
+      
+      <Drawer.Screen
+        name="logout"
+        options={{
+          drawerLabel: 'Cerrar Sesión',
+          title: 'Cerrar Sesión',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="log-out" size={size} color={color} />
+          ),
+        }}
+      />
     </Drawer>
   );
 }
