@@ -16,12 +16,27 @@ export interface Voluntariado {
   beneficios: string[];
 }
 
+export interface Application {
+  id: string;
+  title: string;
+  organization: string;
+  applicationDate: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  location: string;
+  description: string;
+  time: string;
+  date: string;
+  image: any; // Para las imágenes locales con require()
+}
+
 type VoluntariadoState = {
   voluntariados: Voluntariado[];
   voluntariadoSeleccionado: Voluntariado | null;
+  applications: Application[];
   isLoading: boolean;
   setVoluntariados: (voluntariados: Voluntariado[]) => void;
   setVoluntariadoSeleccionado: (voluntariado: Voluntariado | null) => void;
+  setApplications: (applications: Application[]) => void;
   setIsLoading: (isLoading: boolean) => void;
   getVoluntariadoById: (id: string) => Voluntariado | undefined;
 };
@@ -168,15 +183,57 @@ const mockVoluntariados: Voluntariado[] = [
   },
 ];
 
+const mockApplications: Application[] = [
+  {
+    id: '1',
+    title: 'Sonrisas de Antaño',
+    organization: 'Club UPB Volunteer',
+    applicationDate: '5 Oct 2025',
+    status: 'pending',
+    location: 'Casa Amandita del Adulto Mayor',
+    description: 'El club UPB Volunteer te invita a ser parte de voluntario por un día: "sonrisas de antaño", en casa amandita del adulto mayor, para compartir una mañana lúdica y de confraternización con adultos mayores.',
+    time: '9:00 a 12:00 hrs',
+    date: 'Viernes 8 de Octubre',
+    image: require('../../assets/Eventos/Evento4.png'),
+  },
+  {
+    id: '2',
+    title: 'Voluntario por un Día - Desayunos Solidarios',
+    organization: 'Club UPB Volunteer',
+    applicationDate: '6 Oct 2025',
+    status: 'accepted',
+    location: 'Zona Central de la Ciudad',
+    description: 'El club UPB Volunteer te invita a ser parte de voluntario por un día, y ayúdanos a repartir desayunos a personas en situación de calle en la zona central de la ciudad.',
+    time: '8:00 a 11:00 hrs',
+    date: 'Sábado 9 de Octubre',
+    image: require('../../assets/Eventos/Evento2.png'),
+  },
+  {
+    id: '3',
+    title: 'Voluntario por un Día - Albergue Villa Colitas',
+    organization: 'Club UPB Volunteer',
+    applicationDate: '7 Oct 2025',
+    status: 'rejected',
+    location: 'Albergue Villa Colitas',
+    description: 'El club UPB Volunteer te invita a ser parte de voluntario por un día en el albergue de Villa Colitas.',
+    time: '9:00 a 12:30 hrs',
+    date: 'Domingo 10 de Octubre',
+    image: require('../../assets/Eventos/Evento3.png'),
+  },
+];
+
 export const useVoluntariadoStore = create<VoluntariadoState>((set, get) => ({
   voluntariados: mockVoluntariados,
   voluntariadoSeleccionado: null,
+  applications: mockApplications,
   isLoading: false,
   
   setVoluntariados: (voluntariados) => set({ voluntariados }),
   
   setVoluntariadoSeleccionado: (voluntariado) => 
     set({ voluntariadoSeleccionado: voluntariado }),
+  
+  setApplications: (applications) => set({ applications }),
   
   setIsLoading: (isLoading) => set({ isLoading }),
   

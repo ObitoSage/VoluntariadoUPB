@@ -6,12 +6,13 @@ Text,
 View, 
 TouchableOpacity, 
 ScrollView, 
-FlatList 
+FlatList,
+Image 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../hooks/useThemeColors';
-import { useVoluntariadoStore } from '../../../store/voluntariadoStore';
+import { useVoluntariadoStore, type Application } from '../../../store/voluntariadoStore';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -87,9 +88,22 @@ StyleSheet.create({
         width: 0,
         height: 4,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    },
+    applicationImageContainer: {
+    width: '100%',
+    height: 210,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: colors.muted + '20',
+    },
+    applicationImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
     },
     applicationHeader: {
     flexDirection: 'row',
@@ -124,10 +138,6 @@ StyleSheet.create({
     backgroundColor: '#FFEBEE',
     borderColor: '#F44336',
     },
-    statusBadgeInReview: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#2196F3',
-    },
     statusText: {
     fontSize: 12,
     fontWeight: '600',
@@ -142,10 +152,6 @@ StyleSheet.create({
     },
     statusTextRejected: {
     color: '#C62828',
-    fontWeight: '600',
-    },
-    statusTextInReview: {
-    color: '#1565C0',
     fontWeight: '600',
     },
     applicationDetails: {
@@ -263,52 +269,14 @@ StyleSheet.create({
 const ApplicationsScreen = () => {
 const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
-const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'inReview'>('all');
+const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
 
-const applications = [
-    {
-    id: '1',
-    title: 'Ayuda Comunitaria en Zona Sur',
-    organization: 'Fundación Esperanza',
-    applicationDate: '15 Nov 2024',
-    status: 'pending' as const,
-    location: 'La Paz, Bolivia',
-    description: 'Apoyo en actividades educativas para niños en situación vulnerable',
-    },
-    {
-    id: '2',
-    title: 'Reforestación Parque Nacional',
-    organization: 'EcoBolivia',
-    applicationDate: '10 Nov 2024',
-    status: 'accepted' as const,
-    location: 'Cochabamba, Bolivia',
-    description: 'Plantación de árboles nativos en áreas degradadas',
-    },
-    {
-    id: '3',
-    title: 'Asistencia Médica Rural',
-    organization: 'Médicos Sin Fronteras',
-    applicationDate: '8 Nov 2024',
-    status: 'inReview' as const,
-    location: 'Santa Cruz, Bolivia',
-    description: 'Apoyo en campañas de salud preventiva en comunidades rurales',
-    },
-    {
-    id: '4',
-    title: 'Educación Digital',
-    organization: 'TechForGood',
-    applicationDate: '5 Nov 2024',
-    status: 'rejected' as const,
-    location: 'La Paz, Bolivia',
-    description: 'Enseñanza de habilidades digitales básicas a adultos mayores',
-    },
-];
+const applications = useVoluntariadoStore((state) => state.applications);
 
 const filters = [
     { key: 'all', title: 'Todas', count: applications.length },
     { key: 'pending', title: 'Pendientes', count: applications.filter(a => a.status === 'pending').length },
     { key: 'accepted', title: 'Aceptadas', count: applications.filter(a => a.status === 'accepted').length },
-    { key: 'inReview', title: 'En Revisión', count: applications.filter(a => a.status === 'inReview').length },
     { key: 'rejected', title: 'Rechazadas', count: applications.filter(a => a.status === 'rejected').length },
 ];
 
@@ -321,7 +289,6 @@ const getStatusBadgeStyle = (status: string) => {
     case 'pending': return styles.statusBadgePending;
     case 'accepted': return styles.statusBadgeAccepted;
     case 'rejected': return styles.statusBadgeRejected;
-    case 'inReview': return styles.statusBadgeInReview;
     default: return styles.statusBadgePending;
     }
 };
@@ -331,7 +298,6 @@ const getStatusTextStyle = (status: string) => {
     case 'pending': return styles.statusTextPending;
     case 'accepted': return styles.statusTextAccepted;
     case 'rejected': return styles.statusTextRejected;
-    case 'inReview': return styles.statusTextInReview;
     default: return styles.statusTextPending;
     }
 };
@@ -341,13 +307,17 @@ const getStatusLabel = (status: string) => {
     case 'pending': return 'Pendiente';
     case 'accepted': return 'Aceptada';
     case 'rejected': return 'Rechazada';
-    case 'inReview': return 'En Revisión';
     default: return 'Pendiente';
     }
 };
 
-const renderApplicationCard = ({ item }: { item: any }) => (
+const renderApplicationCard = ({ item }: { item: Application }) => (
     <View style={styles.applicationCard}>
+    {/* Image of the event */}
+    <View style={styles.applicationImageContainer}>
+        <Image source={item.image} style={styles.applicationImage} />
+    </View>
+    
     <View style={styles.applicationHeader}>
         <Text style={styles.applicationTitle}>{item.title}</Text>
         <View style={[styles.statusBadge, getStatusBadgeStyle(item.status)]}>
@@ -368,11 +338,19 @@ const renderApplicationCard = ({ item }: { item: any }) => (
         </View>
         <View style={styles.detailRow}>
         <Ionicons name="calendar-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>Aplicado el {item.applicationDate}</Text>
+        <Text style={styles.detailText}>{item.date}</Text>
+        </View>
+        <View style={styles.detailRow}>
+        <Ionicons name="time-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
+        <Text style={styles.detailText}>{item.time}</Text>
         </View>
         <View style={styles.detailRow}>
         <Ionicons name="document-text-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
         <Text style={styles.detailText}>{item.description}</Text>
+        </View>
+        <View style={styles.detailRow}>
+        <Ionicons name="checkmark-circle-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
+        <Text style={styles.detailText}>Aplicado el {item.applicationDate}</Text>
         </View>
     </View>
 
