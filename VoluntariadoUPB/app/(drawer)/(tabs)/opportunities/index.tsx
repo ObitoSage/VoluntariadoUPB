@@ -17,7 +17,8 @@ import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { useOportunidades } from '../../../../src/hooks/useOportunidades';
 import { useOportunidadesStore } from '../../../../src/store/oportunidadesStore';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
-import { OportunidadCard, FilterChip, EmptyState, LoadingSkeleton } from '../../../../src/components';
+import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
+import { OportunidadCard, FilterChip, EmptyState, LoadingSkeleton, CreateOportunidadModal } from '../../../../src/components';
 import {
   CATEGORIAS,
   MODALIDADES,
@@ -37,9 +38,16 @@ export default function OportunidadesListScreen() {
   const { oportunidades, loading, refreshing, refresh } = useOportunidades();
   const { filtros, setFiltros, clearFiltros } = useOportunidadesStore();
   const { user, toggleFavorito } = useUserProfile();
+  const { canCreateOpportunity } = useRolePermissions();
 
   const [searchInput, setSearchInput] = useState(filtros.busqueda);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+
+  const handleCreateSuccess = () => {
+    refresh();
+    setCreateModalVisible(false);
+  };
   
   const [tempCampus, setTempCampus] = useState<string[]>(filtros.campus);
   const [tempCategoria, setTempCategoria] = useState<CategoriaType[]>(filtros.categoria);
@@ -139,6 +147,13 @@ export default function OportunidadesListScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Create Opportunity Modal */}
+      <CreateOportunidadModal
+        visible={createModalVisible}
+        onClose={() => setCreateModalVisible(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
       <View style={styles.searchSection}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Ionicons name="search" size={20} color={colors.subtitle} />
@@ -167,6 +182,15 @@ export default function OportunidadesListScreen() {
             </View>
           )}
         </TouchableOpacity>
+
+        {canCreateOpportunity() && (
+          <TouchableOpacity
+            style={[styles.filterButton, { backgroundColor: colors.primary }]}
+            onPress={() => setCreateModalVisible(true)}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {activeFiltersCount > 0 && (

@@ -101,8 +101,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
       await signOut(auth);
+      // Esperamos un tick para asegurarnos de que Firebase procese el cambio
+      await new Promise(resolve => setTimeout(resolve, 0));
       set({ user: null, isLoading: false });
     } catch (error: any) {
       set({ error: 'Error al cerrar sesión', isLoading: false });

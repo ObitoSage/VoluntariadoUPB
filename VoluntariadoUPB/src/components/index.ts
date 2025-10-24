@@ -7,3 +7,4 @@ export { LoadingSkeleton } from './LoadingSkeleton';
 export { ImagePicker } from './ImagePicker';
 export { PostulacionDetailModal } from './PostulacionDetailModal';
 export { GoalModal } from './GoalModal';
+export { CreateOportunidadModal } from './CreateOportunidadModal';
