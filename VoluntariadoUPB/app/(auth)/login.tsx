@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { useGoogleSignIn } from '../hooks/useGoogleSignIn';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -25,7 +24,6 @@ export default function LoginScreen() {
   const { colors } = useThemeColors();
   const router = useRouter();
   
-  const googleSignIn = useGoogleSignIn();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,15 +46,6 @@ export default function LoginScreen() {
     router.push('/(auth)/register');
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      await googleSignIn.signIn();
-      // Redirigir a la app principal después del login exitoso
-      router.replace('/(drawer)/(tabs)');
-    } catch (error) {
-      Alert.alert('Error', 'Error al iniciar sesión con Google');
-    }
-  };
 
   return (
     <KeyboardAvoidingView
@@ -137,23 +126,6 @@ export default function LoginScreen() {
           </View>
 
           {/* Google Sign-In Button */}
-          <TouchableOpacity
-            style={[styles.googleButton, { borderColor: colors.border }]}
-            onPress={handleGoogleSignIn}
-            disabled={googleSignIn.disabled || googleSignIn.isLoading}
-          >
-            {googleSignIn.isLoading ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <>
-                <Ionicons name="logo-google" size={20} color="#DB4437" />
-                <Text style={[styles.googleButtonText, { color: colors.text }]}>
-                  Continuar con Google
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
           {/* Register Link */}
           <View style={styles.registerContainer}>
             <Text style={[styles.registerText, { color: colors.subtitle }]}>
