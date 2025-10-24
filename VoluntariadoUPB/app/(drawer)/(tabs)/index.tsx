@@ -20,6 +20,7 @@ import { useUserGoal } from '../../../src/hooks/useUserGoal';
 import { GoalModal } from '../../../src/components/GoalModal';
 import { useVoluntariadoStore } from '../../../src/store/voluntariadoStore';
 import type { ThemeColors } from '../../theme/colors';
+import { PlantiniHomeCard } from '../../../src/features/chat/components/PlantiniHomeCard';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -366,7 +367,10 @@ return (
         </Text>
         </View>
 
-        {/* Inspirational Banner Section */}
+    {/* Plantini card */}
+    <PlantiniHomeCard />
+
+    {/* Inspirational Banner Section */}
         <View style={styles.bannerSection}>
         <ImageBackground
             source={require('../../../assets/Voluntariado.png')}

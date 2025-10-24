@@ -4,6 +4,9 @@
     "slug": "VoluntariadoUPB",
     "scheme": "voluntariadoupb",
     "version": "1.0.0",
+    "extra": {
+      "GEMINI_BASE_URL": "https://laurena-unrehearsed-natashia.ngrok-free.dev"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
