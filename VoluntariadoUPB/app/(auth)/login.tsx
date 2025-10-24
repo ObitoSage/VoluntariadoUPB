@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,7 +57,11 @@ export default function LoginScreen() {
       <View style={styles.content}>
         {/* Logo/Título */}
         <View style={styles.header}>
-          <Ionicons name="heart-circle" size={80} color={colors.primary} />
+          <Image 
+            source={require('../../assets/logoPlantini.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={[styles.title, { color: colors.text }]}>
             VoluntariadoUPB
           </Text>
@@ -156,6 +161,10 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 130,
+    height: 130,
   },
   title: {
     fontSize: 28,
