@@ -13,14 +13,17 @@ import {
   Platform,
   SafeAreaView,
   ActivityIndicator,
+  Share,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useThemeColors } from '../../../hooks/useThemeColors';
-import { Oportunidad, COLLECTIONS } from '../../../../src/types';
+import { useUserProfile } from '../../../../src/hooks/useUserProfile';
+import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
 
@@ -29,9 +32,11 @@ export default function OportunidadDetailScreen() {
   const router = useRouter();
   const { theme, colors } = useThemeColors();
   const { user } = useAuthStore();
+  const { user: userProfile, toggleFavorito } = useUserProfile();
 
   const [voluntariado, setVoluntariado] = useState<Oportunidad | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   // Estados para el modal de postulación
   const [modalVisible, setModalVisible] = useState(false);
@@ -69,6 +74,13 @@ export default function OportunidadDetailScreen() {
 
     fetchOportunidad();
   }, [id]);
+
+  // Verificar si es favorito
+  useEffect(() => {
+    if (userProfile && id) {
+      setIsFavorite(userProfile.favoritos?.includes(id as string) || false);
+    }
+  }, [userProfile, id]);
   
   const screenColors = {
     cardBackground: colors.surface,
@@ -122,6 +134,26 @@ export default function OportunidadDetailScreen() {
       cultural: '#AA96DA',
     };
     return categoryColors[categoria] || colors.primary;
+  };
+
+  const getStatusColor = (status: string) => {
+    const statusColors: Record<string, string> = {
+      open: '#4CAF50',
+      waitlist: '#FF9800',
+      closed: '#FF6B6B',
+      finished: '#9E9E9E',
+    };
+    return statusColors[status] || colors.primary;
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusLabels: Record<string, string> = {
+      open: 'ABIERTO',
+      waitlist: 'LISTA DE ESPERA',
+      closed: 'CERRADO',
+      finished: 'FINALIZADO',
+    };
+    return statusLabels[status] || status.toUpperCase();
   };
 
   const disponibles = voluntariado.cuposDisponibles || 0;
@@ -197,7 +229,9 @@ export default function OportunidadDetailScreen() {
         organizacion: voluntariado.organizacion,
         descripcion: voluntariado.descripcion,
         location: `${voluntariado.campus}, ${voluntariado.ciudad}`,
-        status: 'pending',
+        status: 'submitted',
+        estado: 'submitted',
+        confirmado: false,
         motivacion,
         disponibilidad,
         telefono: telefono || '',
@@ -207,6 +241,14 @@ export default function OportunidadDetailScreen() {
       };
 
       await addDoc(collection(db, COLLECTIONS.POSTULACIONES), postulacionData);
+
+      // Decrementar cupos disponibles
+      if (id) {
+        const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, id as string);
+        await updateDoc(oportunidadRef, {
+          cuposDisponibles: increment(-1),
+        });
+      }
       
       setIsSubmitting(false);
       setModalVisible(false);
@@ -244,6 +286,43 @@ export default function OportunidadDetailScreen() {
     setErrors({});
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `¡Mira esta oportunidad de voluntariado!\n\n${voluntariado?.titulo}\n\nOrganización: ${voluntariado?.organizacion}\n\nÚnete a esta causa increíble.`,
+        title: voluntariado?.titulo,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!id) return;
+    await toggleFavorito(id as string);
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleOpenMap = () => {
+    if (!voluntariado?.ubicacion) {
+      Alert.alert('Ubicación no disponible', 'Esta oportunidad no tiene una ubicación registrada');
+      return;
+    }
+
+    const { lat, lng } = voluntariado.ubicacion;
+    const label = encodeURIComponent(voluntariado.titulo);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${label}@${lat},${lng}`,
+      android: `geo:0,0?q=${lat},${lng}(${label})`,
+    });
+
+    if (url) {
+      Linking.openURL(url).catch(() => {
+        Alert.alert('Error', 'No se pudo abrir el mapa');
+      });
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar
@@ -260,8 +339,13 @@ export default function OportunidadDetailScreen() {
           <View style={[styles.emojiContainer, { backgroundColor: getCategoryColor(voluntariado.categoria) + '20' }]}>
             <Ionicons name="heart" size={48} color={getCategoryColor(voluntariado.categoria)} />
           </View>
-          <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(voluntariado.categoria) }]}>
-            <Text style={styles.categoryText}>{voluntariado.categoria.toUpperCase()}</Text>
+          <View style={styles.headerBadges}>
+            <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(voluntariado.categoria) }]}>
+              <Text style={styles.categoryText}>{voluntariado.categoria.toUpperCase()}</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(voluntariado.status) }]}>
+              <Text style={styles.statusText}>{getStatusLabel(voluntariado.status)}</Text>
+            </View>
           </View>
         </View>
 
@@ -307,6 +391,22 @@ export default function OportunidadDetailScreen() {
             <View style={styles.infoContent}>
               <Text style={[styles.infoLabel, { color: colors.subtitle }]}>Ubicación</Text>
               <Text style={[styles.infoValue, { color: colors.text }]}>{ubicacionText}</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoIcon}>
+              <Ionicons 
+                name={MODALIDADES.find(m => m.key === voluntariado.modalidad)?.icon as any || 'location'} 
+                size={20} 
+                color={colors.primary} 
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.subtitle }]}>Modalidad</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {MODALIDADES.find(m => m.key === voluntariado.modalidad)?.label || voluntariado.modalidad}
+              </Text>
             </View>
           </View>
         </View>
@@ -386,6 +486,35 @@ export default function OportunidadDetailScreen() {
 
       {/* Botón de postulación fijo */}
       <View style={[styles.footer, { backgroundColor: screenColors.cardBackground, borderTopColor: colors.border }]}>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: colors.surface }]}
+            onPress={handleToggleFavorite}
+          >
+            <Ionicons 
+              name={isFavorite ? 'heart' : 'heart-outline'} 
+              size={24} 
+              color={isFavorite ? '#FF6B6B' : colors.text} 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: colors.surface }]}
+            onPress={handleShare}
+          >
+            <Ionicons name="share-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+
+          {voluntariado.ubicacion && (
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: colors.surface }]}
+              onPress={handleOpenMap}
+            >
+              <Ionicons name="map-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         <TouchableOpacity
           style={[
             styles.applyButton,
@@ -584,16 +713,9 @@ export default function OportunidadDetailScreen() {
                 onPress={handleSubmitPostulacion}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? (
-                  <>
-                    <Text style={styles.submitButtonText}>Enviando...</Text>
-                  </>
-                ) : (
-                  <>
-                    <Ionicons name="send" size={18} color="#fff" />
-                    <Text style={styles.submitButtonText}>Enviar Postulación</Text>
-                  </>
-                )}
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? 'Enviando...' : 'Enviar Postulación'}
+                </Text>
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
@@ -625,12 +747,27 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 50,
   },
+  headerBadges: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   categoryBadge: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
   },
   categoryText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '700',
@@ -752,7 +889,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   applyButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -910,10 +1060,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -921,12 +1072,10 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 1,
-    flexDirection: 'row',
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
   },
   submitButtonText: {
     color: '#ffffff',

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { useGoogleSignIn } from '../hooks/useGoogleSignIn';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -23,6 +24,8 @@ export default function LoginScreen() {
   const { signIn, isLoading, error, clearError } = useAuthStore();
   const { colors } = useThemeColors();
   const router = useRouter();
+  
+  const googleSignIn = useGoogleSignIn();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -43,6 +46,16 @@ export default function LoginScreen() {
   const handleGoToRegister = () => {
     clearError();
     router.push('/(auth)/register');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await googleSignIn.signIn();
+      // Redirigir a la app principal después del login exitoso
+      router.replace('/(drawer)/(tabs)');
+    } catch (error) {
+      Alert.alert('Error', 'Error al iniciar sesión con Google');
+    }
   };
 
   return (
@@ -113,6 +126,31 @@ export default function LoginScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.subtitle }]}>o</Text>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          </View>
+
+          {/* Google Sign-In Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, { borderColor: colors.border }]}
+            onPress={handleGoogleSignIn}
+            disabled={googleSignIn.disabled || googleSignIn.isLoading}
+          >
+            {googleSignIn.isLoading ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color="#DB4437" />
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>
+                  Continuar con Google
+                </Text>
+              </>
             )}
           </TouchableOpacity>
 
@@ -203,6 +241,32 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
+    fontWeight: '600',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  googleButton: {
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  googleButtonText: {
+    fontSize: 16,
     fontWeight: '600',
   },
 });

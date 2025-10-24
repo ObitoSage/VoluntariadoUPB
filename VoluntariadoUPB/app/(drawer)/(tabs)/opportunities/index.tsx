@@ -23,8 +23,10 @@ import {
   MODALIDADES,
   CAMPUS_OPTIONS,
   HABILIDADES_COMUNES,
+  DISPONIBILIDAD_OPTIONS,
   CategoriaType,
   ModalidadType,
+  DisponibilidadType,
 } from '../../../../src/types';
 
 let searchTimeout: NodeJS.Timeout;
@@ -42,6 +44,7 @@ export default function OportunidadesListScreen() {
   const [tempCampus, setTempCampus] = useState<string[]>(filtros.campus);
   const [tempCategoria, setTempCategoria] = useState<CategoriaType[]>(filtros.categoria);
   const [tempModalidad, setTempModalidad] = useState<ModalidadType | null>(filtros.modalidad);
+  const [tempDisponibilidad, setTempDisponibilidad] = useState<string[]>(filtros.disponibilidad);
   const [tempHabilidades, setTempHabilidades] = useState<string[]>(filtros.habilidades);
 
   const handleSearchChange = (text: string) => {
@@ -65,6 +68,7 @@ export default function OportunidadesListScreen() {
     if (filtros.campus.length > 0) count += filtros.campus.length;
     if (filtros.categoria.length > 0) count += filtros.categoria.length;
     if (filtros.modalidad) count += 1;
+    if (filtros.disponibilidad.length > 0) count += filtros.disponibilidad.length;
     if (filtros.habilidades.length > 0) count += filtros.habilidades.length;
     if (filtros.busqueda) count += 1;
     return count;
@@ -75,6 +79,7 @@ export default function OportunidadesListScreen() {
       campus: tempCampus,
       categoria: tempCategoria,
       modalidad: tempModalidad,
+      disponibilidad: tempDisponibilidad,
       habilidades: tempHabilidades,
     });
     setFilterModalVisible(false);
@@ -84,6 +89,7 @@ export default function OportunidadesListScreen() {
     setTempCampus([]);
     setTempCategoria([]);
     setTempModalidad(null);
+    setTempDisponibilidad([]);
     setTempHabilidades([]);
     clearFiltros();
     setSearchInput('');
@@ -94,6 +100,7 @@ export default function OportunidadesListScreen() {
     setTempCampus(filtros.campus);
     setTempCategoria(filtros.categoria);
     setTempModalidad(filtros.modalidad);
+    setTempDisponibilidad(filtros.disponibilidad);
     setTempHabilidades(filtros.habilidades);
     setFilterModalVisible(true);
   };
@@ -116,6 +123,9 @@ export default function OportunidadesListScreen() {
         break;
       case 'modalidad':
         setFiltros({ modalidad: null });
+        break;
+      case 'disponibilidad':
+        setFiltros({ disponibilidad: filtros.disponibilidad.filter((d) => d !== value) });
         break;
       case 'habilidad':
         setFiltros({ habilidades: filtros.habilidades.filter((h) => h !== value) });
@@ -199,6 +209,15 @@ export default function OportunidadesListScreen() {
               icon="close"
             />
           )}
+          {filtros.disponibilidad.map((disp) => (
+            <FilterChip
+              key={disp}
+              label={DISPONIBILIDAD_OPTIONS.find((d) => d.key === disp)?.label || disp}
+              selected={true}
+              onPress={() => removeFilter('disponibilidad', disp)}
+              icon="close"
+            />
+          ))}
           {filtros.habilidades.map((hab) => (
             <FilterChip
               key={hab}
@@ -315,6 +334,20 @@ export default function OportunidadesListScreen() {
                     selected={tempModalidad === mod.key}
                     onPress={() => setTempModalidad(tempModalidad === mod.key ? null : mod.key)}
                     icon={mod.icon}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={[styles.filterTitle, { color: colors.text }]}>Disponibilidad Horaria</Text>
+              <View style={styles.chipContainer}>
+                {DISPONIBILIDAD_OPTIONS.map((disp) => (
+                  <FilterChip
+                    key={disp.key}
+                    label={disp.label}
+                    selected={tempDisponibilidad.includes(disp.key)}
+                    onPress={() => toggleSelection(tempDisponibilidad, disp.key, setTempDisponibilidad)}
                   />
                 ))}
               </View>
