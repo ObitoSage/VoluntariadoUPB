@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useRouter } from 'expo-router';
 import { 
 StyleSheet, 
 Text, 
@@ -9,11 +9,15 @@ ScrollView,
 Image, 
 ImageBackground,
 Dimensions,
-FlatList 
+FlatList,
+ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../src/hooks/useThemeColors';
+import { useUserStats } from '../../../src/hooks/useUserStats';
+import { useUserGoal } from '../../../src/hooks/useUserGoal';
+import { GoalModal } from '../../../src/components/GoalModal';
 import { useVoluntariadoStore } from '../../../src/store/voluntariadoStore';
 import type { ThemeColors } from '../../theme/colors';
 
@@ -297,7 +301,33 @@ type CarouselImageSource = ReturnType<typeof require>;
 const InicioScreen = () => {
 const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
+const router = useRouter();
 const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const [goalModalVisible, setGoalModalVisible] = useState(false);
+
+// Obtener y gestionar la meta del usuario
+const { monthlyGoal, updateMonthlyGoal, loading: goalLoading } = useUserGoal();
+
+// Obtener estadísticas reales del usuario
+const { completedActivities, nextActivity, loading } = useUserStats(monthlyGoal);
+
+const handleUpdateGoal = async (newGoal: number) => {
+    const success = await updateMonthlyGoal(newGoal);
+    if (success) {
+    setGoalModalVisible(false);
+    }
+};
+
+const handleNavigateToOportunidad = () => {
+    if (nextActivity) {
+    // Navegar primero al tab de oportunidades, luego al detalle
+    router.push('/(drawer)/(tabs)/opportunities');
+    // Pequeño delay para asegurar que el tab cambió
+    setTimeout(() => {
+        router.push(`/(drawer)/(tabs)/opportunities/${nextActivity.id}` as any);
+    }, 100);
+    }
+};
 
 const carouselImages: CarouselImageSource[] = [
     require('../../../assets/Mensaje/Mensaje1.jpeg'),
@@ -310,17 +340,6 @@ const carouselImages: CarouselImageSource[] = [
     require('../../../assets/Mensaje/Mensaje8.jpeg'),
     require('../../../assets/Mensaje/Mensaje9.jpeg'),
 ];
-
-const userProgress = {
-    completedActivities: 3,
-    totalActivities: 10,
-    monthlyGoal: 5,
-};
-
-const nextActivity = {
-    title: 'Limpieza del campus',
-    daysUntil: 2,
-};
 
 const renderCarouselItem = ({ item, index }: { item: CarouselImageSource; index: number }) => (
     <View style={styles.carouselItem}>
@@ -368,40 +387,72 @@ return (
             <Ionicons name="trophy" size={24} color={colors.primary} />
             </View>
             <View style={styles.progressTextContainer}>
-            <Text style={styles.progressTitle}>
-                Has participado en {userProgress.completedActivities} voluntariados este mes 
-            </Text>
-            <Text style={styles.progressSubtitle}>
-                Meta: {userProgress.monthlyGoal} actividades
-            </Text>
+            {loading || goalLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+                <>
+                <Text style={styles.progressTitle}>
+                    Has participado en {completedActivities} voluntariado{completedActivities !== 1 ? 's' : ''} este mes 
+                </Text>
+                <TouchableOpacity onPress={() => setGoalModalVisible(true)}>
+                    <Text style={[styles.progressSubtitle, { textDecorationLine: 'underline' }]}>
+                    Meta: {monthlyGoal} actividades · Editar
+                    </Text>
+                </TouchableOpacity>
+                </>
+            )}
             </View>
         </View>
-        <View style={styles.progressBar}>
+        {!loading && !goalLoading && (
+            <View style={styles.progressBar}>
             <View 
-            style={[
+                style={[
                 styles.progressBarFill, 
-                { width: `${(userProgress.completedActivities / userProgress.monthlyGoal) * 100}%` }
-            ]} 
+                { width: `${Math.min((completedActivities / monthlyGoal) * 100, 100)}%` }
+                ]} 
             />
-        </View>
+            </View>
+        )}
         </View>
 
         {/* Next Activity Section */}
+        {!loading && nextActivity ? (
         <View style={styles.nextActivitySection}>
-        <Text style={styles.sectionTitle}>Próxima Actividad</Text>
-        <View style={styles.nextActivityCard}>
+            <Text style={styles.sectionTitle}>Próxima Oportunidad</Text>
+            <TouchableOpacity 
+            style={styles.nextActivityCard}
+            onPress={handleNavigateToOportunidad}
+            activeOpacity={0.7}
+            >
             <View style={styles.nextActivityIcon}>
-            <Ionicons name="calendar" size={28} color={colors.primary} />
+                <Ionicons name="calendar" size={28} color={colors.primary} />
             </View>
             <View style={styles.nextActivityContent}>
-            <Text style={styles.nextActivityLabel}>Próximamente</Text>
-            <Text style={styles.nextActivityTitle}>{nextActivity.title}</Text>
-            <Text style={styles.nextActivityTime}>
-                En {nextActivity.daysUntil} días
-            </Text>
+                <Text style={styles.nextActivityLabel}>{nextActivity.organizacion}</Text>
+                <Text style={styles.nextActivityTitle} numberOfLines={2}>{nextActivity.titulo}</Text>
+                <Text style={styles.nextActivityTime}>
+                Fecha límite en {nextActivity.daysUntil} día{nextActivity.daysUntil !== 1 ? 's' : ''}
+                </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={colors.subtitle} />
+            </TouchableOpacity>
+        </View>
+        ) : !loading && (
+        <View style={styles.nextActivitySection}>
+            <Text style={styles.sectionTitle}>Próxima Oportunidad</Text>
+            <View style={styles.nextActivityCard}>
+            <View style={styles.nextActivityIcon}>
+                <Ionicons name="calendar-outline" size={28} color={colors.subtitle} />
+            </View>
+            <View style={styles.nextActivityContent}>
+                <Text style={styles.nextActivityLabel}>Sin oportunidades disponibles</Text>
+                <Text style={[styles.progressSubtitle, { marginTop: 4 }]}>
+                No hay oportunidades próximas en este momento
+                </Text>
+            </View>
             </View>
         </View>
-        </View>
+        )}
 
         {/* Carousel Section */}
         <View style={styles.carouselSection}>
@@ -457,6 +508,14 @@ return (
         </View>
         </View>
     </ScrollView>
+
+      {/* Goal Modal */}
+    <GoalModal
+        visible={goalModalVisible}
+        currentGoal={monthlyGoal}
+        onSave={handleUpdateGoal}
+        onCancel={() => setGoalModalVisible(false)}
+    />
     </View>
 );
 };

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
+import { PostulacionDetailModal } from '../../../../src/components/PostulacionDetailModal';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -281,8 +282,20 @@ const ApplicationsScreen = () => {
 const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
 const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+const [selectedOportunidadId, setSelectedOportunidadId] = useState<string | null>(null);
+const [modalVisible, setModalVisible] = useState(false);
 
 const { postulaciones, loading, refreshing, refresh } = usePostulaciones();
+
+const handleVerDetalles = (oportunidadId: string) => {
+    setSelectedOportunidadId(oportunidadId);
+    setModalVisible(true);
+};
+
+const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedOportunidadId(null);
+};
 
 const filters = useMemo(() => [
     { key: 'all', title: 'Todas', count: postulaciones.length },
@@ -331,7 +344,7 @@ const renderApplicationCard = ({ item }: { item: any }) => {
             day: 'numeric', 
             month: 'long', 
             year: 'numeric' 
-          })
+        })
         : 'Fecha no disponible';
 
     return (
@@ -371,7 +384,10 @@ const renderApplicationCard = ({ item }: { item: any }) => {
     </View>
 
     <View style={styles.applicationActions}>
-        <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]}>
+        <TouchableOpacity 
+        style={[styles.actionButton, styles.secondaryButton]}
+        onPress={() => handleVerDetalles(item.oportunidadId)}
+        >
         <Ionicons name="eye-outline" size={16} color={colors.text} />
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>Ver Detalles</Text>
         </TouchableOpacity>
@@ -467,6 +483,13 @@ return (
         {renderEmptyState()}
         </View>
     )}
+
+      {/* Modal de Detalles */}
+    <PostulacionDetailModal
+        visible={modalVisible}
+        oportunidadId={selectedOportunidadId}
+        onClose={handleCloseModal}
+    />
     </View>
 );
 };
