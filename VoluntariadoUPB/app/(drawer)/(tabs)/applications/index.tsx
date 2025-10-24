@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Stack } from 'expo-router';
 import { 
 StyleSheet, 
@@ -7,12 +7,13 @@ View,
 TouchableOpacity, 
 ScrollView, 
 FlatList,
-Image 
+RefreshControl,
+ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../hooks/useThemeColors';
-import { useVoluntariadoStore, type Application } from '../../../store/voluntariadoStore';
+import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -264,6 +265,16 @@ StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     },
+    loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    },
+    loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    },
 });
 
 const ApplicationsScreen = () => {
@@ -271,18 +282,21 @@ const { colors } = useThemeColors();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
 const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
 
-const applications = useVoluntariadoStore((state) => state.applications);
+const { postulaciones, loading, refreshing, refresh } = usePostulaciones();
 
-const filters = [
-    { key: 'all', title: 'Todas', count: applications.length },
-    { key: 'pending', title: 'Pendientes', count: applications.filter(a => a.status === 'pending').length },
-    { key: 'accepted', title: 'Aceptadas', count: applications.filter(a => a.status === 'accepted').length },
-    { key: 'rejected', title: 'Rechazadas', count: applications.filter(a => a.status === 'rejected').length },
-];
+const filters = useMemo(() => [
+    { key: 'all', title: 'Todas', count: postulaciones.length },
+    { key: 'pending', title: 'Pendientes', count: postulaciones.filter(a => a.status === 'pending').length },
+    { key: 'accepted', title: 'Aceptadas', count: postulaciones.filter(a => a.status === 'accepted').length },
+    { key: 'rejected', title: 'Rechazadas', count: postulaciones.filter(a => a.status === 'rejected').length },
+], [postulaciones]);
 
-const filteredApplications = activeFilter === 'all' 
-    ? applications 
-    : applications.filter(app => app.status === activeFilter);
+const filteredApplications = useMemo(() => 
+    activeFilter === 'all' 
+        ? postulaciones 
+        : postulaciones.filter(app => app.status === activeFilter),
+    [activeFilter, postulaciones]
+);
 
 const getStatusBadgeStyle = (status: string) => {
     switch (status) {
@@ -311,15 +325,19 @@ const getStatusLabel = (status: string) => {
     }
 };
 
-const renderApplicationCard = ({ item }: { item: Application }) => (
+const renderApplicationCard = ({ item }: { item: any }) => {
+    const formattedDate = item.applicationDate 
+        ? new Date(item.applicationDate).toLocaleDateString('es-ES', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          })
+        : 'Fecha no disponible';
+
+    return (
     <View style={styles.applicationCard}>
-    {/* Image of the event */}
-    <View style={styles.applicationImageContainer}>
-        <Image source={item.image} style={styles.applicationImage} />
-    </View>
-    
     <View style={styles.applicationHeader}>
-        <Text style={styles.applicationTitle}>{item.title}</Text>
+        <Text style={styles.applicationTitle}>{item.titulo}</Text>
         <View style={[styles.statusBadge, getStatusBadgeStyle(item.status)]}>
         <Text style={[styles.statusText, getStatusTextStyle(item.status)]}>
             {getStatusLabel(item.status)}
@@ -330,7 +348,7 @@ const renderApplicationCard = ({ item }: { item: Application }) => (
     <View style={styles.applicationDetails}>
         <View style={styles.detailRow}>
         <Ionicons name="business-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.organization}</Text>
+        <Text style={styles.detailText}>{item.organizacion}</Text>
         </View>
         <View style={styles.detailRow}>
         <Ionicons name="location-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
@@ -338,20 +356,18 @@ const renderApplicationCard = ({ item }: { item: Application }) => (
         </View>
         <View style={styles.detailRow}>
         <Ionicons name="calendar-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.date}</Text>
-        </View>
-        <View style={styles.detailRow}>
-        <Ionicons name="time-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.time}</Text>
+        <Text style={styles.detailText}>Postulado: {formattedDate}</Text>
         </View>
         <View style={styles.detailRow}>
         <Ionicons name="document-text-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.description}</Text>
+        <Text style={styles.detailText} numberOfLines={2}>{item.descripcion}</Text>
         </View>
+        {item.disponibilidad && (
         <View style={styles.detailRow}>
-        <Ionicons name="checkmark-circle-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>Aplicado el {item.applicationDate}</Text>
+        <Ionicons name="time-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
+        <Text style={styles.detailText}>Disponibilidad: {item.disponibilidad}</Text>
         </View>
+        )}
     </View>
 
     <View style={styles.applicationActions}>
@@ -365,15 +381,10 @@ const renderApplicationCard = ({ item }: { item: Application }) => (
             <Text style={[styles.buttonText, styles.primaryButtonText]}>Confirmar</Text>
         </TouchableOpacity>
         )}
-        {item.status === 'pending' && (
-        <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
-            <Ionicons name="create-outline" size={16} color="#ffffff" />
-            <Text style={[styles.buttonText, styles.primaryButtonText]}>Editar</Text>
-        </TouchableOpacity>
-        )}
     </View>
     </View>
-);
+    );
+};
 
 const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -428,7 +439,14 @@ return (
     </View>
 
       {/* Applications List */}
-    {filteredApplications.length > 0 ? (
+    {loading && postulaciones.length === 0 ? (
+        <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.subtitle }]}>
+            Cargando postulaciones...
+        </Text>
+        </View>
+    ) : filteredApplications.length > 0 ? (
         <FlatList
         data={filteredApplications}
         renderItem={renderApplicationCard}
@@ -436,6 +454,13 @@ return (
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         style={styles.applicationsList}
+        refreshControl={
+            <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+            />
+        }
         />
     ) : (
         <View style={styles.applicationsSection}>

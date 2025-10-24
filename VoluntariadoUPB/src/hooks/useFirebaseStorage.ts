@@ -1,0 +1,73 @@
+import { useState } from 'react';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from '../../config/firebase';
+
+export const useFirebaseStorage = () => {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadImage = async (
+    uri: string,
+    folder: string,
+    filename?: string
+  ): Promise<{ success: boolean; url?: string; error?: string }> => {
+    try {
+      setUploading(true);
+      setError(null);
+
+      // Convertir la URI a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Generar nombre único si no se proporciona
+      const name = filename || `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const storageRef = ref(storage, `${folder}/${name}`);
+
+      // Subir el archivo
+      await uploadBytes(storageRef, blob);
+
+      // Obtener la URL de descarga
+      const downloadURL = await getDownloadURL(storageRef);
+
+      setUploading(false);
+      return { success: true, url: downloadURL };
+    } catch (err: any) {
+      console.error('Error uploading image:', err);
+      const errorMessage = err.message || 'Error al subir la imagen';
+      setError(errorMessage);
+      setUploading(false);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const deleteImage = async (imageUrl: string): Promise<{ success: boolean }> => {
+    try {
+      const imageRef = ref(storage, imageUrl);
+      await deleteObject(imageRef);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error deleting image:', err);
+      setError('Error al eliminar la imagen');
+      return { success: false };
+    }
+  };
+
+  const getImageUrl = async (path: string): Promise<string | null> => {
+    try {
+      const imageRef = ref(storage, path);
+      const url = await getDownloadURL(imageRef);
+      return url;
+    } catch (err) {
+      console.error('Error getting image URL:', err);
+      return null;
+    }
+  };
+
+  return {
+    uploadImage,
+    deleteImage,
+    getImageUrl,
+    uploading,
+    error,
+  };
+};

@@ -1,420 +1,385 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   FlatList,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
-  TextInput,
-  StatusBar,
+  RefreshControl,
+  Modal,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useVoluntariadoStore, Voluntariado } from '../../../store/voluntariadoStore';
 import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useOportunidades } from '../../../../src/hooks/useOportunidades';
+import { useOportunidadesStore } from '../../../../src/store/oportunidadesStore';
+import { useUserProfile } from '../../../../src/hooks/useUserProfile';
+import { OportunidadCard, FilterChip, EmptyState, LoadingSkeleton } from '../../../../src/components';
+import {
+  CATEGORIAS,
+  MODALIDADES,
+  CAMPUS_OPTIONS,
+  HABILIDADES_COMUNES,
+  CategoriaType,
+  ModalidadType,
+} from '../../../../src/types';
+
+let searchTimeout: NodeJS.Timeout;
 
 export default function OportunidadesListScreen() {
   const router = useRouter();
-  const { theme, colors } = useThemeColors();
+  const { colors } = useThemeColors();
+  const { oportunidades, loading, refreshing, refresh } = useOportunidades();
+  const { filtros, setFiltros, clearFiltros } = useOportunidadesStore();
+  const { user, toggleFavorito } = useUserProfile();
+
+  const [searchInput, setSearchInput] = useState(filtros.busqueda);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   
-  const voluntariados = useVoluntariadoStore((state) => state.voluntariados);
-  const setVoluntariadoSeleccionado = useVoluntariadoStore(
-    (state) => state.setVoluntariadoSeleccionado
-  );
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [tempCampus, setTempCampus] = useState<string[]>(filtros.campus);
+  const [tempCategoria, setTempCategoria] = useState<CategoriaType[]>(filtros.categoria);
+  const [tempModalidad, setTempModalidad] = useState<ModalidadType | null>(filtros.modalidad);
+  const [tempHabilidades, setTempHabilidades] = useState<string[]>(filtros.habilidades);
 
-  const screenColors = {
-    searchBackground: theme === 'dark' ? '#3d3d3d' : '#f0f0f0',
-    categoryActive: colors.primary,
-    categoryInactive: theme === 'dark' ? '#3d3d3d' : '#e8e8e8',
-    cardBackground: colors.surface,
+  const handleSearchChange = (text: string) => {
+    setSearchInput(text);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      setFiltros({ busqueda: text.toLowerCase() });
+    }, 300);
   };
 
-  const categories = [
-    { key: null, label: 'Todos', icon: 'apps' },
-    { key: 'animales', label: 'Animales', icon: 'paw' },
-    { key: 'educacion', label: 'Educación', icon: 'school' },
-    { key: 'medio-ambiente', label: 'Ambiente', icon: 'leaf' },
-    { key: 'salud', label: 'Salud', icon: 'medical' },
-    { key: 'comunidad', label: 'Comunidad', icon: 'people' },
-  ];
+  const handleFavorite = useCallback(async (oportunidadId: string) => {
+    await toggleFavorito(oportunidadId);
+  }, [toggleFavorito]);
 
-  const filteredVoluntariados = voluntariados.filter((v) => {
-    const matchesSearch =
-      v.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.organizacion.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.ubicacion.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === null || v.categoria === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+  const isFavorite = useCallback((oportunidadId: string) => {
+    return user?.favoritos?.includes(oportunidadId) || false;
+  }, [user?.favoritos]);
 
-  const handleVoluntariadoPress = (voluntariado: Voluntariado) => {
-    setVoluntariadoSeleccionado(voluntariado);
-    router.push(`/opportunities/${voluntariado.id}`);
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filtros.campus.length > 0) count += filtros.campus.length;
+    if (filtros.categoria.length > 0) count += filtros.categoria.length;
+    if (filtros.modalidad) count += 1;
+    if (filtros.habilidades.length > 0) count += filtros.habilidades.length;
+    if (filtros.busqueda) count += 1;
+    return count;
+  }, [filtros]);
+
+  const handleApplyFilters = () => {
+    setFiltros({
+      campus: tempCampus,
+      categoria: tempCategoria,
+      modalidad: tempModalidad,
+      habilidades: tempHabilidades,
+    });
+    setFilterModalVisible(false);
   };
 
-  const getCategoryColor = (categoria: string) => {
-    const categoryColors: Record<string, string> = {
-      animales: '#FF6B6B',
-      educacion: '#4ECDC4',
-      'medio-ambiente': '#95E1D3',
-      salud: '#F38181',
-      comunidad: '#AA96DA',
-    };
-    return categoryColors[categoria] || colors.primary;
+  const handleClearFilters = () => {
+    setTempCampus([]);
+    setTempCategoria([]);
+    setTempModalidad(null);
+    setTempHabilidades([]);
+    clearFiltros();
+    setSearchInput('');
+    setFilterModalVisible(false);
   };
 
-  const renderVoluntariadoCard = ({ item }: { item: Voluntariado }) => {
-    const disponibles = item.participantesMaximos - item.participantesActuales;
-    const porcentajeOcupado = (item.participantesActuales / item.participantesMaximos) * 100;
+  const openFilterModal = () => {
+    setTempCampus(filtros.campus);
+    setTempCategoria(filtros.categoria);
+    setTempModalidad(filtros.modalidad);
+    setTempHabilidades(filtros.habilidades);
+    setFilterModalVisible(true);
+  };
 
-    return (
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: screenColors.cardBackground, borderColor: colors.border }]}
-        onPress={() => handleVoluntariadoPress(item)}
-        activeOpacity={0.7}
-      >
-        {/* Emoji/Imagen */}
-        <View style={styles.cardHeader}>
-          <View style={[styles.emojiContainer, { backgroundColor: getCategoryColor(item.categoria) + '20' }]}>
-            <Text style={styles.emoji}>{item.imagen}</Text>
-          </View>
-          <View style={styles.headerInfo}>
-            <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(item.categoria) }]}>
-              <Text style={styles.categoryText}>{item.categoria.toUpperCase()}</Text>
-            </View>
-          </View>
-        </View>
+  const toggleSelection = <T,>(array: T[], item: T, setter: React.Dispatch<React.SetStateAction<T[]>>) => {
+    if (array.includes(item)) {
+      setter(array.filter((i) => i !== item));
+    } else {
+      setter([...array, item]);
+    }
+  };
 
-        {/* Contenido */}
-        <View style={styles.cardContent}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
-            {item.titulo}
-          </Text>
-          
-          <View style={styles.infoRow}>
-            <Ionicons name="business" size={14} color={colors.subtitle} />
-            <Text style={[styles.infoText, { color: colors.subtitle }]} numberOfLines={1}>
-              {item.organizacion}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Ionicons name="location" size={14} color={colors.subtitle} />
-            <Text style={[styles.infoText, { color: colors.subtitle }]} numberOfLines={1}>
-              {item.ubicacion}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Ionicons name="calendar" size={14} color={colors.subtitle} />
-            <Text style={[styles.infoText, { color: colors.subtitle }]}>
-              {item.fecha} • {item.duracion}
-            </Text>
-          </View>
-
-          {/* Disponibilidad */}
-          <View style={styles.availabilityContainer}>
-            <View style={styles.availabilityInfo}>
-              <Ionicons 
-                name="people" 
-                size={16} 
-                color={disponibles > 0 ? colors.primary : '#FF6B6B'} 
-              />
-              <Text style={[styles.availabilityText, { color: colors.text }]}>
-                {disponibles > 0 
-                  ? `${disponibles} lugares disponibles`
-                  : 'Completo'}
-              </Text>
-            </View>
-            <View style={styles.progressBarContainer}>
-              <View 
-                style={[
-                  styles.progressBar, 
-                  { 
-                    width: `${porcentajeOcupado}%`,
-                    backgroundColor: porcentajeOcupado >= 100 ? '#FF6B6B' : colors.primary 
-                  }
-                ]} 
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
-          <Text style={[styles.footerText, { color: colors.primary }]}>
-            Ver detalles →
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+  const removeFilter = (type: string, value?: any) => {
+    switch (type) {
+      case 'campus':
+        setFiltros({ campus: filtros.campus.filter((c) => c !== value) });
+        break;
+      case 'categoria':
+        setFiltros({ categoria: filtros.categoria.filter((c) => c !== value) });
+        break;
+      case 'modalidad':
+        setFiltros({ modalidad: null });
+        break;
+      case 'habilidad':
+        setFiltros({ habilidades: filtros.habilidades.filter((h) => h !== value) });
+        break;
+      case 'busqueda':
+        setSearchInput('');
+        setFiltros({ busqueda: '' });
+        break;
+    }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar 
-        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
-        backgroundColor={colors.background}
-      />
-      
-      {/* Buscador */}
-      <View style={styles.searchContainer}>
-        <View style={[styles.searchInputContainer, { backgroundColor: screenColors.searchBackground }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.searchSection}>
+        <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Ionicons name="search" size={20} color={colors.subtitle} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Buscar voluntariados..."
+            placeholder="Buscar oportunidades..."
             placeholderTextColor={colors.subtitle}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+            value={searchInput}
+            onChangeText={handleSearchChange}
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+          {searchInput.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearchChange('')}>
               <Ionicons name="close-circle" size={20} color={colors.subtitle} />
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity
+          style={[styles.filterButton, { backgroundColor: colors.primary }]}
+          onPress={openFilterModal}
+        >
+          <Ionicons name="filter" size={20} color="#fff" />
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* Filtros de categoría */}
-      <View style={styles.categoriesWrapper}>
-        <FlatList
+      {activeFiltersCount > 0 && (
+        <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={categories}
-          keyExtractor={(item) => item.key || 'all'}
-          contentContainerStyle={styles.categoriesContainer}
-          renderItem={({ item }) => {
-            const isActive = selectedCategory === item.key;
-            return (
-              <TouchableOpacity
-                style={[
-                  styles.categoryChip,
-                  {
-                    backgroundColor: isActive ? screenColors.categoryActive : screenColors.categoryInactive,
-                  },
-                ]}
-                onPress={() => setSelectedCategory(item.key)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={item.icon as any}
-                  size={16}
-                  color={isActive ? '#ffffff' : colors.subtitle}
-                />
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    { color: isActive ? '#ffffff' : colors.subtitle },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </View>
+          contentContainerStyle={styles.activeFilters}
+        >
+          {filtros.busqueda && (
+            <FilterChip
+              label={`"${filtros.busqueda}"`}
+              selected={true}
+              onPress={() => removeFilter('busqueda')}
+              icon="close"
+            />
+          )}
+          {filtros.campus.map((campus) => (
+            <FilterChip
+              key={campus}
+              label={campus}
+              selected={true}
+              onPress={() => removeFilter('campus', campus)}
+              icon="close"
+            />
+          ))}
+          {filtros.categoria.map((cat) => (
+            <FilterChip
+              key={cat}
+              label={CATEGORIAS.find((c) => c.key === cat)?.label || cat}
+              selected={true}
+              onPress={() => removeFilter('categoria', cat)}
+              icon="close"
+            />
+          ))}
+          {filtros.modalidad && (
+            <FilterChip
+              label={filtros.modalidad}
+              selected={true}
+              onPress={() => removeFilter('modalidad')}
+              icon="close"
+            />
+          )}
+          {filtros.habilidades.map((hab) => (
+            <FilterChip
+              key={hab}
+              label={hab}
+              selected={true}
+              onPress={() => removeFilter('habilidad', hab)}
+              icon="close"
+            />
+          ))}
+        </ScrollView>
+      )}
 
-      {/* Contador de resultados */}
-      <View style={styles.resultsCounter}>
+      <View style={styles.resultsSection}>
         <Text style={[styles.resultsText, { color: colors.subtitle }]}>
-          {filteredVoluntariados.length} {filteredVoluntariados.length === 1 ? 'oportunidad' : 'oportunidades'} {selectedCategory ? `en ${categories.find(c => c.key === selectedCategory)?.label}` : 'disponibles'}
+          {oportunidades.length} {oportunidades.length === 1 ? 'oportunidad encontrada' : 'oportunidades encontradas'}
         </Text>
+        {activeFiltersCount > 0 && (
+          <TouchableOpacity onPress={handleClearFilters}>
+            <Text style={[styles.clearFiltersText, { color: colors.primary }]}>
+              Limpiar filtros
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Lista de voluntariados */}
-      <FlatList
-        data={filteredVoluntariados}
-        keyExtractor={(item) => item.id}
-        renderItem={renderVoluntariadoCard}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search" size={64} color={colors.subtitle} />
-            <Text style={[styles.emptyText, { color: colors.subtitle }]}>
-              No se encontraron voluntariados
-            </Text>
-            <Text style={[styles.emptySubtext, { color: colors.subtitle }]}>
-              Intenta con otros términos de búsqueda
-            </Text>
+      {loading && !refreshing ? (
+        <LoadingSkeleton type="card" count={5} />
+      ) : (
+        <FlatList
+          data={oportunidades}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <OportunidadCard
+              oportunidad={item}
+              onPress={() => router.push(`/opportunities/${item.id}`)}
+              onFavorite={() => handleFavorite(item.id)}
+              isFavorite={isFavorite(item.id)}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="search"
+              title="No se encontraron oportunidades"
+              description="Intenta ajustar los filtros o buscar con otros términos"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <Modal
+        visible={filterModalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+              <Ionicons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Filtros</Text>
+            <TouchableOpacity onPress={handleClearFilters}>
+              <Text style={[styles.clearText, { color: colors.primary }]}>Limpiar</Text>
+            </TouchableOpacity>
           </View>
-        }
-      />
-    </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.filterSection}>
+              <Text style={[styles.filterTitle, { color: colors.text }]}>Campus</Text>
+              <View style={styles.chipContainer}>
+                {CAMPUS_OPTIONS.map((campus) => (
+                  <FilterChip
+                    key={campus}
+                    label={campus}
+                    selected={tempCampus.includes(campus)}
+                    onPress={() => toggleSelection(tempCampus, campus, setTempCampus)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={[styles.filterTitle, { color: colors.text }]}>Categorías</Text>
+              <View style={styles.chipContainer}>
+                {CATEGORIAS.map((cat) => (
+                  <FilterChip
+                    key={cat.key}
+                    label={cat.label}
+                    selected={tempCategoria.includes(cat.key)}
+                    onPress={() => toggleSelection(tempCategoria, cat.key, setTempCategoria)}
+                    icon={cat.icon}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={[styles.filterTitle, { color: colors.text }]}>Modalidad</Text>
+              <View style={styles.chipContainer}>
+                {MODALIDADES.map((mod) => (
+                  <FilterChip
+                    key={mod.key}
+                    label={mod.label}
+                    selected={tempModalidad === mod.key}
+                    onPress={() => setTempModalidad(tempModalidad === mod.key ? null : mod.key)}
+                    icon={mod.icon}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={[styles.filterTitle, { color: colors.text }]}>Habilidades</Text>
+              <View style={styles.chipContainer}>
+                {HABILIDADES_COMUNES.map((hab) => (
+                  <FilterChip
+                    key={hab}
+                    label={hab}
+                    selected={tempHabilidades.includes(hab)}
+                    onPress={() => toggleSelection(tempHabilidades, hab, setTempHabilidades)}
+                  />
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+
+          <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+            <TouchableOpacity
+              style={[styles.applyButton, { backgroundColor: colors.primary }]}
+              onPress={handleApplyFilters}
+            >
+              <Text style={styles.applyButtonText}>Aplicar filtros</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-  },
-  categoriesWrapper: {
-    height: 56,
-    marginBottom: 12,
-  },
-  categoriesContainer: {
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
-    marginRight: 10,
-    height: 40,
-  },
-  categoryChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  resultsCounter: {
-    paddingHorizontal: 16,
+  container: { flex: 1 },
+  searchSection: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 12 },
+  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1, gap: 8 },
+  searchInput: { flex: 1, fontSize: 16 },
+  filterButton: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  filterBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#FF6B6B', borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
+  filterBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  activeFilters: { 
+    paddingHorizontal: 16, 
     paddingBottom: 8,
-  },
-  resultsText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  card: {
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingBottom: 12,
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  emojiContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
     alignItems: 'center',
+    height: 52, // Altura fija para evitar desbordamiento
   },
-  emoji: {
-    fontSize: 32,
+  resultsSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
+  resultsText: { fontSize: 14, fontWeight: '500' },
+  clearFiltersText: { fontSize: 14, fontWeight: '600' },
+  listContent: { paddingHorizontal: 16, paddingBottom: 16 },
+  modalContainer: { flex: 1 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  clearText: { fontSize: 16, fontWeight: '600' },
+  modalContent: { flex: 1, paddingHorizontal: 20 },
+  filterSection: { marginTop: 24 },
+  filterTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
+  chipContainer: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap',
+    alignItems: 'center', // Alinear verticalmente
   },
-  headerInfo: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  categoryBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  cardContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-    lineHeight: 24,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  infoText: {
-    fontSize: 14,
-    flex: 1,
-  },
-  availabilityContainer: {
-    marginTop: 8,
-    gap: 6,
-  },
-  availabilityInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  availabilityText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  progressBarContainer: {
-    height: 6,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  cardFooter: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-  },
+  modalFooter: { paddingHorizontal: 20, paddingVertical: 16, borderTopWidth: 1 },
+  applyButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  applyButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
