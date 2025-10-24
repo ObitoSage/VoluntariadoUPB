@@ -6,3 +6,5 @@ export { useUserProfile } from './useUserProfile';
 export { useFirebaseStorage } from './useFirebaseStorage';
 export { useGoogleSignIn } from './useGoogleSignIn';
 export { useThemeColors } from './useThemeColors';
+export { useUserStats } from './useUserStats';
+export { useUserGoal } from './useUserGoal';

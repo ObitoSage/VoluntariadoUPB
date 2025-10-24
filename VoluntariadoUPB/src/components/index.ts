@@ -5,3 +5,5 @@ export { CategoriaBadge } from './CategoriaBadge';
 export { EmptyState } from './EmptyState';
 export { LoadingSkeleton } from './LoadingSkeleton';
 export { ImagePicker } from './ImagePicker';
+export { PostulacionDetailModal } from './PostulacionDetailModal';
+export { GoalModal } from './GoalModal';
