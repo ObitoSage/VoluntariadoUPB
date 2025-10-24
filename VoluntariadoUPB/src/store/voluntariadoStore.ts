@@ -21,7 +21,7 @@ export interface Application {
   title: string;
   organization: string;
   applicationDate: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'waitlisted';
   location: string;
   description: string;
   time: string;

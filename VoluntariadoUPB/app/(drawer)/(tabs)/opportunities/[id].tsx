@@ -23,6 +23,7 @@ import { db } from '../../../../config/firebase';
 import { useAuthStore } from '../../../../src/store/useAuthStore';
 import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
+import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
@@ -33,10 +34,15 @@ export default function OportunidadDetailScreen() {
   const { theme, colors } = useThemeColors();
   const { user } = useAuthStore();
   const { user: userProfile, toggleFavorito } = useUserProfile();
+  const { isStudent, canManageOpportunities } = useRolePermissions();
 
   const [voluntariado, setVoluntariado] = useState<Oportunidad | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [showApplications, setShowApplications] = useState(false);
+
+  const canApply = isStudent() && voluntariado?.status === 'open';
   
   // Estados para el modal de postulación
   const [modalVisible, setModalVisible] = useState(false);
@@ -196,6 +202,17 @@ export default function OportunidadDetailScreen() {
   };
 
   const handleAplicar = () => {
+    if (!canApply) {
+      Alert.alert(
+        'No Disponible',
+        canManageOpportunities() 
+          ? 'Como administrador/organizador no puedes postular a oportunidades.'
+          : 'No puedes postular a esta oportunidad en este momento.',
+        [{ text: 'Entendido' }]
+      );
+      return;
+    }
+
     if (isCompleto) {
       Alert.alert(
         'Voluntariado Completo',
@@ -206,6 +223,16 @@ export default function OportunidadDetailScreen() {
       // Abrir modal de postulación
       setModalVisible(true);
     }
+  };
+
+  const handleEdit = () => {
+    if (!canManageOpportunities()) return;
+    setEditModalVisible(true);
+  };
+
+  const handleViewApplications = () => {
+    if (!canManageOpportunities()) return;
+    setShowApplications(true);
   };
 
   const handleSubmitPostulacion = async () => {

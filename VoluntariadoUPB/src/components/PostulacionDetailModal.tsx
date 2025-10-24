@@ -219,12 +219,62 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: '600',
       marginLeft: 8,
     },
+    adminSection: {
+      marginTop: 24,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 24,
+    },
+    adminActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginBottom: 16,
+    },
+    adminButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    acceptButton: {
+      backgroundColor: '#E8F5E9',
+      borderColor: '#4CAF50',
+    },
+    rejectButton: {
+      backgroundColor: '#FFEBEE',
+      borderColor: '#F44336',
+    },
+    adminButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+    contactButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    contactButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
   });
 
 interface PostulacionDetailModalProps {
   visible: boolean;
   oportunidadId: string | null;
   onClose: () => void;
+  isAdminView?: boolean;
 }
 
 export const PostulacionDetailModal: React.FC<PostulacionDetailModalProps> = ({

@@ -1,41 +1,64 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function LogoutScreen() {
   const { logout } = useAuthStore();
   const router = useRouter();
+  const navigation = useNavigation();
 
-  useEffect(() => {
-    const handleLogout = async () => {
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const showLogoutConfirmation = () => {
+      if (!isMounted) return;
+
       Alert.alert(
         'Cerrar Sesión',
         '¿Estás seguro que deseas cerrar sesión?',
         [
           {
             text: 'Cancelar',
-            onPress: () => router.back(),
+            onPress: () => {
+              if (isMounted) {
+                navigation.goBack();
+              }
+            },
             style: 'cancel',
           },
           {
             text: 'Cerrar Sesión',
             onPress: async () => {
+              if (!isMounted) return;
+
               try {
                 await logout();
-                router.replace('/(auth)/login');
+                if (isMounted) {
+                  setTimeout(() => {
+                    router.replace('/(auth)');
+                  }, 0);
+                }
               } catch (error) {
-                Alert.alert('Error', 'No se pudo cerrar sesión');
-                router.back();
+                console.error('Error during logout:', error);
+                if (isMounted) {
+                  Alert.alert('Error', 'No se pudo cerrar sesión');
+                  navigation.goBack();
+                }
               }
             },
             style: 'destructive',
           },
-        ]
+        ],
+        { cancelable: false }
       );
     };
 
-    handleLogout();
+    showLogoutConfirmation();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

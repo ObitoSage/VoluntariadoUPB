@@ -13,8 +13,10 @@ ActivityIndicator,
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../../src/hooks/useThemeColors';
-import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
+import { usePostulaciones, Postulacion } from '../../../../src/hooks/usePostulaciones';
+import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
 import { PostulacionDetailModal } from '../../../../src/components/PostulacionDetailModal';
+import { AdminPostulacionModal } from '../../../../src/components/AdminPostulacionModal';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -140,6 +142,10 @@ StyleSheet.create({
     backgroundColor: '#FFEBEE',
     borderColor: '#F44336',
     },
+    statusBadgeWaitlisted: {
+    backgroundColor: '#FFF4E6',
+    borderColor: '#FFA94D',
+    },
     statusText: {
     fontSize: 12,
     fontWeight: '600',
@@ -154,6 +160,10 @@ StyleSheet.create({
     },
     statusTextRejected: {
     color: '#C62828',
+    fontWeight: '600',
+    },
+    statusTextWaitlisted: {
+    color: '#FF922B',
     fontWeight: '600',
     },
     applicationDetails: {
@@ -278,23 +288,32 @@ StyleSheet.create({
     },
 });
 
-const ApplicationsScreen = () => {
+export default function ApplicationsScreen() {
 const { colors } = useThemeColors();
+const { canViewAllApplications } = useRolePermissions();
 const styles = React.useMemo(() => createStyles(colors), [colors]);
-const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
-const [selectedOportunidadId, setSelectedOportunidadId] = useState<string | null>(null);
+const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'waitlisted'>('all');
+const [selectedPostulacion, setSelectedPostulacion] = useState<Postulacion | null>(null);
 const [modalVisible, setModalVisible] = useState(false);
 
-const { postulaciones, loading, refreshing, refresh } = usePostulaciones();
+const { postulaciones, loading, refreshing, refresh, updatePostulacionStatus } = usePostulaciones();
 
 const handleVerDetalles = (oportunidadId: string) => {
-    setSelectedOportunidadId(oportunidadId);
+    // Open the opportunity detail modal (non-admin users)
+    setSelectedPostulacion({} as Postulacion); // placeholder to drive modal lifecycle
+    // store the opportunity id inside selectedPostulacion.id so PostulacionDetailModal can use it
+    setSelectedPostulacion({ id: oportunidadId } as unknown as Postulacion);
+    setModalVisible(true);
+};
+
+const handleAdministrar = (postulacion: Postulacion) => {
+    setSelectedPostulacion(postulacion);
     setModalVisible(true);
 };
 
 const handleCloseModal = () => {
     setModalVisible(false);
-    setSelectedOportunidadId(null);
+    setSelectedPostulacion(null);
 };
 
 const filters = useMemo(() => [
@@ -302,6 +321,7 @@ const filters = useMemo(() => [
     { key: 'pending', title: 'Pendientes', count: postulaciones.filter(a => a.status === 'pending').length },
     { key: 'accepted', title: 'Aceptadas', count: postulaciones.filter(a => a.status === 'accepted').length },
     { key: 'rejected', title: 'Rechazadas', count: postulaciones.filter(a => a.status === 'rejected').length },
+    { key: 'waitlisted', title: 'Lista de espera', count: postulaciones.filter(a => a.status === 'waitlisted').length },
 ], [postulaciones]);
 
 const filteredApplications = useMemo(() => 
@@ -316,6 +336,7 @@ const getStatusBadgeStyle = (status: string) => {
     case 'pending': return styles.statusBadgePending;
     case 'accepted': return styles.statusBadgeAccepted;
     case 'rejected': return styles.statusBadgeRejected;
+    case 'waitlisted': return styles.statusBadgeWaitlisted;
     default: return styles.statusBadgePending;
     }
 };
@@ -325,6 +346,7 @@ const getStatusTextStyle = (status: string) => {
     case 'pending': return styles.statusTextPending;
     case 'accepted': return styles.statusTextAccepted;
     case 'rejected': return styles.statusTextRejected;
+    case 'waitlisted': return styles.statusTextWaitlisted;
     default: return styles.statusTextPending;
     }
 };
@@ -334,6 +356,7 @@ const getStatusLabel = (status: string) => {
     case 'pending': return 'Pendiente';
     case 'accepted': return 'Aceptada';
     case 'rejected': return 'Rechazada';
+    case 'waitlisted': return 'En lista de espera';
     default: return 'Pendiente';
     }
 };
@@ -346,6 +369,8 @@ const renderApplicationCard = ({ item }: { item: any }) => {
             year: 'numeric' 
         })
         : 'Fecha no disponible';
+    
+    const isAdminView = canViewAllApplications();
 
     return (
     <View style={styles.applicationCard}>
@@ -384,19 +409,13 @@ const renderApplicationCard = ({ item }: { item: any }) => {
     </View>
 
     <View style={styles.applicationActions}>
-        <TouchableOpacity 
-        style={[styles.actionButton, styles.secondaryButton]}
-        onPress={() => handleVerDetalles(item.oportunidadId)}
-        >
-        <Ionicons name="eye-outline" size={16} color={colors.text} />
-        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Ver Detalles</Text>
-        </TouchableOpacity>
-        {item.status === 'accepted' && (
-        <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
-            <Ionicons name="checkmark-outline" size={16} color="#ffffff" />
-            <Text style={[styles.buttonText, styles.primaryButtonText]}>Confirmar</Text>
-        </TouchableOpacity>
-        )}
+    <TouchableOpacity 
+    style={[styles.actionButton, styles.secondaryButton]}
+    onPress={() => isAdminView ? handleAdministrar(item) : handleVerDetalles(item.oportunidadId)}
+    >
+    <Ionicons name="eye-outline" size={16} color={colors.text} />
+    <Text style={[styles.buttonText, styles.secondaryButtonText]}>{isAdminView ? 'Administrar' : 'Ver Detalles'}</Text>
+    </TouchableOpacity>
     </View>
     </View>
     );
@@ -425,9 +444,13 @@ return (
     
       {/* Header Section */}
     <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>Mis Postulaciones</Text>
+        <Text style={styles.headerTitle}>
+          {canViewAllApplications() ? 'Gestión de Postulaciones' : 'Mis Postulaciones'}
+        </Text>
         <Text style={styles.headerSubtitle}>
-        Mantén un seguimiento de todas tus aplicaciones a voluntariados y su estado actual.
+          {canViewAllApplications() 
+            ? 'Administra todas las postulaciones de los estudiantes a las oportunidades de voluntariado.'
+            : 'Mantén un seguimiento de todas tus aplicaciones a voluntariados y su estado actual.'}
         </Text>
     </View>
 
@@ -485,13 +508,27 @@ return (
     )}
 
       {/* Modal de Detalles */}
-    <PostulacionDetailModal
-        visible={modalVisible}
-        oportunidadId={selectedOportunidadId}
-        onClose={handleCloseModal}
-    />
+        {/* Modal de Detalles / Administración */}
+        {canViewAllApplications() ? (
+            <AdminPostulacionModal
+                visible={modalVisible}
+                postulacion={selectedPostulacion}
+                onClose={handleCloseModal}
+                onUpdateStatus={async (id: string, status: 'accepted' | 'rejected' | 'pending' | 'waitlisted') => {
+                    const ok = await updatePostulacionStatus(id, status);
+                    if (ok) {
+                        refresh();
+                        handleCloseModal();
+                    }
+                }}
+            />
+        ) : (
+            <PostulacionDetailModal
+                visible={modalVisible}
+                oportunidadId={selectedPostulacion ? selectedPostulacion.id : null}
+                onClose={handleCloseModal}
+            />
+        )}
     </View>
 );
-};
-
-export default ApplicationsScreen;
+}
