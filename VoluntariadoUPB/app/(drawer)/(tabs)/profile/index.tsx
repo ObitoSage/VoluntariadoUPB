@@ -73,7 +73,55 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 24,
       fontWeight: '700',
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 12,
+    },
+    academicInfo: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 16,
+      marginBottom: 12,
+      flexWrap: 'wrap',
+      paddingHorizontal: 24,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    infoText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    bio: {
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+      marginBottom: 12,
+    },
+    interestsPreview: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 24,
+      marginBottom: 16,
+    },
+    interestTag: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    interestTagText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    moreInterests: {
+      fontSize: 12,
+      fontWeight: '600',
+      fontStyle: 'italic',
     },
     studentId: {
       fontSize: 14,
@@ -837,11 +885,59 @@ const ProfileScreen = () => {
           </View>
           
           <Text style={styles.name}>{profile?.nombre || 'Usuario'}</Text>
-          {profile?.email && (
-            <Text style={styles.studentId}>{profile.email}</Text>
+          
+          {/* Campus y Carrera */}
+          {(profile?.campus || profile?.carrera) && (
+            <View style={styles.academicInfo}>
+              {profile?.campus && (
+                <View style={styles.infoRow}>
+                  <Ionicons name="location" size={16} color={colors.primary} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>
+                    {profile.campus}
+                  </Text>
+                </View>
+              )}
+              {profile?.carrera && (
+                <View style={styles.infoRow}>
+                  <Ionicons name="school" size={16} color={colors.primary} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>
+                    {profile.carrera}
+                  </Text>
+                </View>
+              )}
+            </View>
           )}
-          {profile?.carrera && (
-            <Text style={styles.career}>{profile.carrera}</Text>
+          
+          {/* Biografía */}
+          {profile?.bio ? (
+            <Text style={[styles.bio, { color: colors.subtitle }]} numberOfLines={3}>
+              {profile.bio}
+            </Text>
+          ) : (
+            <Text style={[styles.bio, { color: colors.muted }]}>
+              No bio yet
+            </Text>
+          )}
+          
+          {/* Preferencias/Intereses */}
+          {profile?.intereses && profile.intereses.length > 0 && (
+            <View style={styles.interestsPreview}>
+              {profile.intereses.slice(0, 3).map((interes, index) => (
+                <View 
+                  key={index}
+                  style={[styles.interestTag, { backgroundColor: colors.primary + '20' }]}
+                >
+                  <Text style={[styles.interestTagText, { color: colors.primary }]}>
+                    {interes}
+                  </Text>
+                </View>
+              ))}
+              {profile.intereses.length > 3 && (
+                <Text style={[styles.moreInterests, { color: colors.subtitle }]}>
+                  +{profile.intereses.length - 3} more
+                </Text>
+              )}
+            </View>
           )}
           
           <TouchableOpacity 
