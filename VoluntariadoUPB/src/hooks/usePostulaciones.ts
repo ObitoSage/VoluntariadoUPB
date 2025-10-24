@@ -48,6 +48,8 @@ export interface Postulacion {
 export const usePostulaciones = () => {
   const { user } = useAuthStore();
   const { canViewAllApplications } = useRolePermissions();
+  // Resolve permission once to avoid function identity changes causing repeated effect runs
+  const canViewAll = canViewAllApplications ? canViewAllApplications() : false;
   const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export const usePostulaciones = () => {
     
     try {
       const postulacionesRef = collection(db, COLLECTIONS.POSTULACIONES);
-      const q = canViewAllApplications()
+      const q = canViewAll
         ? query(postulacionesRef)
         : query(postulacionesRef, where('estudianteId', '==', user.uid));
 
@@ -102,7 +104,7 @@ export const usePostulaciones = () => {
               const data = docSnap.data();
               
               let estudianteData = {};
-              if (canViewAllApplications()) {
+              if (canViewAll) {
                 const userData = await fetchUserData(data.estudianteId);
                 if (userData) {
                   estudianteData = userData;
@@ -149,7 +151,7 @@ export const usePostulaciones = () => {
       setError('Error al configurar la escucha de postulaciones');
       setLoading(false);
     }
-  }, [user?.uid, canViewAllApplications]);
+  }, [user?.uid, canViewAll]);
 
   const refresh = async () => {
     if (!user?.uid) return;
@@ -157,7 +159,7 @@ export const usePostulaciones = () => {
     setRefreshing(true);
     try {
       const postulacionesRef = collection(db, COLLECTIONS.POSTULACIONES);
-      const q = canViewAllApplications()
+      const q = canViewAll
         ? query(postulacionesRef)
         : query(postulacionesRef, where('estudianteId', '==', user.uid));
       

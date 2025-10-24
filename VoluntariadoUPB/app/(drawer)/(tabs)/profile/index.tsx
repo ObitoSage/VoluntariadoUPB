@@ -952,7 +952,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Dashboard Section */}
+        {/* Dashboard Section
         <View style={styles.dashboardSection}>
           <Text style={styles.sectionTitle}>Dashboard</Text>
           
@@ -985,9 +985,9 @@ const ProfileScreen = () => {
               </Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
-        {/* Achievements Section */}
+        {/* Achievements Section
         <View style={styles.impactSection}>
           <Text style={styles.sectionTitle}>Achievements</Text>
           
@@ -1011,11 +1011,11 @@ const ProfileScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </View> */}
 
         {/* Activity Feed Section */}
         <View style={styles.activitySection}>
-          <Text style={styles.sectionTitle}>Activity Feed</Text>
+          <Text style={styles.sectionTitle}>Actividades</Text>
           
           {postulacionesLoading ? (
             <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} />
@@ -1082,17 +1082,12 @@ const ProfileScreen = () => {
             </ScrollView>
           )}
 
-          {postulaciones.length > 0 && (
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View all</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Favorites Section */}
         <View style={styles.favoritesSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Favorites</Text>
+            <Text style={styles.sectionTitle}>Favoritos</Text>
             {favoritesCount > 0 && (
               <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.countBadgeText}>{favoritesCount}</Text>
