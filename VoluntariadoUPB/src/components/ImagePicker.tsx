@@ -12,6 +12,7 @@ import * as ImagePickerExpo from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../../app/hooks/useThemeColors';
 import { useFirebaseStorage } from '../hooks/useFirebaseStorage';
+import { useAuthStore } from '../../app/store/useAuthStore';
 
 interface ImagePickerProps {
   currentImageUri?: string;
@@ -30,6 +31,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 }) => {
   const { colors } = useThemeColors();
   const { uploadImage, uploading } = useFirebaseStorage();
+  const { user } = useAuthStore();
   const [localUri, setLocalUri] = useState<string | undefined>(currentImageUri);
 
   const requestPermissions = async (type: 'camera' | 'library') => {
@@ -106,54 +108,79 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   };
 
   const showImageSourceOptions = () => {
+    const options: any[] = [
+      {
+        text: 'Tomar foto',
+        onPress: () => handlePickImage('camera'),
+      },
+      {
+        text: 'Elegir de galería',
+        onPress: () => handlePickImage('library'),
+      },
+    ];
+
+    // Agregar opción de usar foto de Google si está disponible
+    if (user?.photoURL) {
+      options.unshift({
+        text: 'Usar foto de Google',
+        onPress: handleUseGooglePhoto,
+      });
+    }
+
+    options.push({
+      text: 'Cancelar',
+      style: 'cancel',
+    });
+
     Alert.alert(
       'Seleccionar imagen',
       'Elige una opción',
-      [
-        {
-          text: 'Tomar foto',
-          onPress: () => handlePickImage('camera'),
-        },
-        {
-          text: 'Elegir de galería',
-          onPress: () => handlePickImage('library'),
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ],
+      options,
       { cancelable: true }
     );
   };
 
+  const handleUseGooglePhoto = () => {
+    if (user?.photoURL) {
+      setLocalUri(user.photoURL);
+      onImageSelected(user.photoURL);
+      Alert.alert('¡Listo!', 'Foto de Google aplicada correctamente');
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.imageContainer, { borderColor: colors.border }]}
-        onPress={showImageSourceOptions}
-        disabled={uploading}
-      >
-        {localUri ? (
-          <Image source={{ uri: localUri }} style={styles.image} />
-        ) : (
-          <View style={[styles.placeholder, { backgroundColor: colors.primary + '20' }]}>
-            <Ionicons name="person" size={64} color={colors.primary} />
-          </View>
-        )}
+      <View style={styles.imageWrapper}>
+        <TouchableOpacity
+          style={[styles.imageContainer, { borderColor: colors.primary }]}
+          onPress={showImageSourceOptions}
+          disabled={uploading}
+        >
+          {localUri ? (
+            <Image source={{ uri: localUri }} style={styles.image} />
+          ) : (
+            <View style={[styles.placeholder, { backgroundColor: colors.primary + '20' }]}>
+              <Ionicons name="person" size={64} color={colors.primary} />
+            </View>
+          )}
 
-        {/* Loading overlay */}
-        {uploading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        )}
+          {/* Loading overlay */}
+          {uploading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          )}
+        </TouchableOpacity>
 
-        {/* Camera icon button */}
-        <View style={[styles.cameraButton, { backgroundColor: colors.primary }]}>
-          <Ionicons name="camera" size={20} color="#fff" />
-        </View>
-      </TouchableOpacity>
+        {/* Camera icon button - FUERA del círculo */}
+        <TouchableOpacity 
+          style={[styles.cameraButton, { backgroundColor: colors.primary }]}
+          onPress={showImageSourceOptions}
+          disabled={uploading}
+        >
+          <Ionicons name="camera" size={18} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       <Text style={[styles.hint, { color: colors.subtitle }]}>
         Toca para cambiar la imagen
@@ -167,13 +194,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  imageWrapper: {
+    position: 'relative',
+    width: 120,
+    height: 120,
+  },
   imageContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 3,
+    borderWidth: 4,
     overflow: 'hidden',
-    position: 'relative',
   },
   image: {
     width: '100%',
@@ -197,13 +228,15 @@ const styles = StyleSheet.create({
   },
   cameraButton: {
     position: 'absolute',
-    bottom: 4,
-    right: 4,
+    bottom: 0,
+    right: 0,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

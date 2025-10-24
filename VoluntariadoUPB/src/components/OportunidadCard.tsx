@@ -20,6 +20,25 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   isFavorite,
 }) => {
   const { colors } = useThemeColors();
+  const [isFavoritePressed, setIsFavoritePressed] = React.useState(false);
+
+  const handleCardPress = () => {
+    // Solo ejecutar onPress si no se presionó el botón de favorito
+    if (!isFavoritePressed) {
+      onPress();
+    }
+    setIsFavoritePressed(false);
+  };
+
+  const handleFavoritePress = (e: any) => {
+    // Marcar que se presionó el botón de favorito
+    setIsFavoritePressed(true);
+    // Prevenir propagación si está disponible
+    if (e && typeof e.stopPropagation === 'function') {
+      e.stopPropagation();
+    }
+    onFavorite();
+  };
 
   const getStatusColor = () => {
     switch (oportunidad.status) {
@@ -71,7 +90,7 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   return (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      onPress={onPress}
+      onPress={handleCardPress}
       activeOpacity={0.7}
     >
       {/* Cover Image */}
@@ -92,7 +111,7 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
         {/* Favorite Button */}
         <TouchableOpacity
           style={[styles.favoriteButton, { backgroundColor: colors.surface }]}
-          onPress={onFavorite}
+          onPress={handleFavoritePress}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons

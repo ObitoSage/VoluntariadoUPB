@@ -33,6 +33,7 @@ export const useUserProfile = () => {
           const newUser = {
             nombre: authUser.displayName || 'Usuario',
             email: authUser.email || '',
+            avatar: authUser.photoURL || '', // Usar foto de Google si está disponible
             role: 'student' as const,
             campus: '',
             intereses: [],
@@ -47,6 +48,7 @@ export const useUserProfile = () => {
             uid: authUser.uid,
             nombre: newUser.nombre,
             email: newUser.email,
+            avatar: newUser.avatar,
             role: newUser.role,
             campus: newUser.campus,
             intereses: newUser.intereses,
