@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-// ==================== ENUMS ====================
+
 
 export type CategoriaType = 'social' | 'ambiental' | 'educativo' | 'cultural' | 'salud';
 export type ModalidadType = 'presencial' | 'remoto' | 'hibrido';
@@ -9,7 +9,7 @@ export type PostulacionEstadoType = 'submitted' | 'under_review' | 'accepted' | 
 export type UserRoleType = 'student' | 'organizer' | 'admin';
 export type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
 
-// ==================== UBICACIÓN ====================
+
 
 export interface Ubicacion {
   lat: number;
@@ -17,7 +17,7 @@ export interface Ubicacion {
   direccion: string;
 }
 
-// ==================== OPORTUNIDAD ====================
+
 
 export interface Oportunidad {
   id: string;
@@ -47,7 +47,7 @@ export interface OportunidadFormData extends Omit<Oportunidad, 'id' | 'titleLowe
   // Para crear/editar oportunidades
 }
 
-// ==================== USUARIO ====================
+
 
 export interface User {
   uid: string;
@@ -58,6 +58,7 @@ export interface User {
   telefono?: string;
   intereses: string[];
   avatar?: string;
+  avatarPublicId?: string; 
   bio?: string;
   carrera?: string;
   semestre?: number;
@@ -74,9 +75,9 @@ export interface UserProfileUpdate {
   telefono?: string;
   intereses?: string[];
   avatar?: string;
+  avatarPublicId?: string; 
 }
 
-// ==================== POSTULACIÓN ====================
 
 export interface Postulacion {
   id: string;
@@ -101,19 +102,19 @@ export interface PostulacionFormData {
   telefono?: string;
 }
 
-// ==================== FILTROS ====================
+
 
 export interface OportunidadesFiltros {
   campus: string[];
   categoria: CategoriaType[];
   modalidad: ModalidadType | null;
-  disponibilidad: string[]; // días de la semana
+  disponibilidad: string[]; 
   habilidades: string[];
   busqueda: string;
   status: OportunidadStatusType[];
 }
 
-// ==================== ESTADÍSTICAS ====================
+
 
 export interface UserStats {
   totalPostulaciones: number;
@@ -122,7 +123,7 @@ export interface UserStats {
   oportunidadesFavoritas: number;
 }
 
-// ==================== COMPONENTES ====================
+
 
 export interface StatusBadgeProps {
   status: OportunidadStatusType;
@@ -154,7 +155,7 @@ export interface LoadingSkeletonProps {
   count?: number;
 }
 
-// ==================== FIREBASE COLLECTIONS ====================
+
 
 export const COLLECTIONS = {
   OPORTUNIDADES: 'oportunidades',
@@ -162,7 +163,7 @@ export const COLLECTIONS = {
   POSTULACIONES: 'postulaciones',
 } as const;
 
-// ==================== CONSTANTES ====================
+
 
 export const CATEGORIAS: { key: CategoriaType; label: string; icon: string; color: string }[] = [
   { key: 'social', label: 'Social', icon: 'people', color: '#FF6B6B' },

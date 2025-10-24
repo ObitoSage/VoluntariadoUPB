@@ -4,7 +4,6 @@ import {
   Text, 
   View, 
   ScrollView, 
-  Image, 
   TouchableOpacity,
   Modal,
   TextInput,
@@ -23,9 +22,18 @@ import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
 import { useFavoriteOportunidades } from '../../../../src/hooks/useFavoriteOportunidades';
 import { useAuthStore } from '../../../../src/store/useAuthStore';
-import { ImagePicker } from '../../../../src/components/ImagePicker';
+import { CloudinaryImagePicker } from '../../../../src/components/CloudinaryImagePicker';
 import { CAMPUS_OPTIONS, CATEGORIAS } from '../../../../src/types';
 import type { User } from '../../../../src/types';
+
+// Componentes modulares
+import { 
+  ProfileHeader, 
+  ProfileStats, 
+  AchievementsList,
+  AchievementModal,
+  type Achievement 
+} from '../../../../src/components/Profile';
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -36,210 +44,12 @@ const createStyles = (colors: ThemeColors) =>
     scrollContent: {
       paddingBottom: 24,
     },
-    header: {
-      alignItems: 'center',
-      paddingTop: 20,
-      paddingBottom: 32,
-      paddingHorizontal: 24,
-      position: 'relative',
-    },
-    profileImageContainer: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      borderWidth: 4,
-      borderColor: colors.primary,
-      marginBottom: 20,
-      overflow: 'hidden',
-      backgroundColor: colors.surface,
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-    },
-    profileImage: {
-      width: '100%',
-      height: '100%',
-    },
-    profilePlaceholder: {
-      width: '100%',
-      height: '100%',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.primary + '20',
-    },
-    name: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 12,
-    },
-    academicInfo: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 16,
-      marginBottom: 12,
-      flexWrap: 'wrap',
-      paddingHorizontal: 24,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    infoText: {
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    bio: {
-      fontSize: 14,
-      lineHeight: 20,
-      textAlign: 'center',
-      paddingHorizontal: 32,
-      marginBottom: 12,
-    },
-    interestsPreview: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: 24,
-      marginBottom: 16,
-    },
-    interestTag: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-    },
-    interestTagText: {
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    moreInterests: {
-      fontSize: 12,
-      fontWeight: '600',
-      fontStyle: 'italic',
-    },
-    studentId: {
-      fontSize: 14,
-      color: colors.subtitle,
-      marginBottom: 4,
-    },
-    career: {
-      fontSize: 14,
-      color: colors.subtitle,
-    },
-    dashboardSection: {
-      paddingHorizontal: 20,
-      marginBottom: 28,
-    },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 16,
       letterSpacing: 0.3,
-    },
-    dashboardGrid: {
-      flexDirection: 'row',
-      gap: 12,
-      marginBottom: 12,
-    },
-    dashboardCard: {
-      flex: 1,
-      backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    dashboardCardLarge: {
-      backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    cardIconContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    cardValue: {
-      fontSize: 28,
-      fontWeight: '700',
-      marginBottom: 4,
-    },
-    cardLabel: {
-      fontSize: 12,
-      color: colors.subtitle,
-    },
-    cardLabelLarge: {
-      fontSize: 14,
-      color: colors.subtitle,
-      marginBottom: 4,
-    },
-    impactSection: {
-      paddingHorizontal: 20,
-      marginBottom: 28,
-    },
-    achievementsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 16,
-      paddingVertical: 8,
-    },
-    achievementBadge: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative',
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-    },
-    achievementIconContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    achievementBadgeCount: {
-      position: 'absolute',
-      top: -4,
-      right: -4,
-      backgroundColor: '#FF6B6B',
-      borderRadius: 12,
-      minWidth: 24,
-      height: 24,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 6,
-      borderWidth: 2,
-      borderColor: '#fff',
-    },
-    achievementBadgeCountText: {
-      color: '#fff',
-      fontSize: 12,
-      fontWeight: '700',
     },
     activitySection: {
       paddingHorizontal: 20,
@@ -257,24 +67,6 @@ const createStyles = (colors: ThemeColors) =>
     emptyActivityText: {
       fontSize: 15,
       fontWeight: '500',
-    },
-    activityList: {
-      gap: 12,
-    },
-    activityCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      gap: 16,
     },
     activityCardHorizontal: {
       width: 260,
@@ -311,10 +103,6 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.subtitle,
       marginBottom: 8,
     },
-    activityValue: {
-      fontSize: 16,
-      fontWeight: '700',
-    },
     statusBadge: {
       paddingHorizontal: 12,
       paddingVertical: 6,
@@ -325,16 +113,6 @@ const createStyles = (colors: ThemeColors) =>
       color: '#fff',
       fontSize: 12,
       fontWeight: '600',
-    },
-    viewAllButton: {
-      alignItems: 'center',
-      paddingVertical: 12,
-      marginTop: 12,
-    },
-    viewAllText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.primary,
     },
     // Favorites Section
     favoritesSection: {
@@ -436,96 +214,15 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 11,
       fontWeight: '600',
     },
-    editButton: {
-      flexDirection: 'row',
+    viewAllButton: {
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      paddingHorizontal: 20,
       paddingVertical: 12,
-      borderRadius: 24,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 3,
-      marginTop: 16,
+      marginTop: 12,
     },
-    editButtonText: {
+    viewAllText: {
       fontSize: 14,
       fontWeight: '600',
-    },
-    // Achievement Modal styles
-    achievementModalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    achievementModalContent: {
-      width: '100%',
-      maxWidth: 400,
-      borderRadius: 24,
-      padding: 32,
-      alignItems: 'center',
-      elevation: 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-    },
-    achievementModalClose: {
-      position: 'absolute',
-      top: 16,
-      right: 16,
-      zIndex: 1,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    achievementModalBadge: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-      position: 'relative',
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-    },
-    achievementModalTitle: {
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    achievementModalDescription: {
-      fontSize: 16,
-      lineHeight: 24,
-      textAlign: 'center',
-      marginBottom: 24,
-    },
-    achievementModalButton: {
-      paddingHorizontal: 32,
-      paddingVertical: 14,
-      borderRadius: 24,
-      minWidth: 120,
-    },
-    achievementModalButtonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: '700',
-      textAlign: 'center',
+      color: colors.primary,
     },
     // Modal styles
     modalContainer: {
@@ -707,13 +404,7 @@ const ProfileScreen = () => {
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [achievementModalVisible, setAchievementModalVisible] = useState(false);
-  const [selectedAchievement, setSelectedAchievement] = useState<{
-    title: string;
-    description: string;
-    icon: string;
-    color: string;
-    iconColor: string;
-  } | null>(null);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form state
@@ -742,6 +433,7 @@ const ProfileScreen = () => {
         semestre: profile.semestre || 0,
         telefono: profile.telefono || '',
         avatar: profile.avatar || '',
+        avatarPublicId: profile.avatarPublicId || '',
         intereses: profile.intereses || [],
       });
     }
@@ -756,7 +448,7 @@ const ProfileScreen = () => {
   const eventosProximos = postulaciones.filter(p => p.status === 'pending').length;
 
   // Achievements data
-  const achievements = [
+  const achievements: Achievement[] = [
     {
       id: 1,
       title: 'First Volunteer',
@@ -784,7 +476,7 @@ const ProfileScreen = () => {
     },
   ];
 
-  const handleAchievementPress = (achievement: typeof achievements[0]) => {
+  const handleAchievementPress = (achievement: Achievement) => {
     setSelectedAchievement(achievement);
     setAchievementModalVisible(true);
   };
@@ -843,8 +535,12 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleImageSelected = (url: string) => {
-    setEditForm({ ...editForm, avatar: url });
+  const handleImageSelected = async (url: string, publicId: string) => {
+    setEditForm({ 
+      ...editForm, 
+      avatar: url,
+      avatarPublicId: publicId,
+    });
   };
 
   const handleAddInterest = () => {
@@ -872,146 +568,24 @@ const ProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header con foto de perfil */}
-        <View style={styles.header}>
-          <View style={styles.profileImageContainer}>
-            {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={styles.profileImage} />
-            ) : (
-              <View style={styles.profilePlaceholder}>
-                <Ionicons name="person" size={64} color={colors.primary} />
-              </View>
-            )}
-          </View>
-          
-          <Text style={styles.name}>{profile?.nombre || 'Usuario'}</Text>
-          
-          {/* Campus y Carrera */}
-          {(profile?.campus || profile?.carrera) && (
-            <View style={styles.academicInfo}>
-              {profile?.campus && (
-                <View style={styles.infoRow}>
-                  <Ionicons name="location" size={16} color={colors.primary} />
-                  <Text style={[styles.infoText, { color: colors.text }]}>
-                    {profile.campus}
-                  </Text>
-                </View>
-              )}
-              {profile?.carrera && (
-                <View style={styles.infoRow}>
-                  <Ionicons name="school" size={16} color={colors.primary} />
-                  <Text style={[styles.infoText, { color: colors.text }]}>
-                    {profile.carrera}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-          
-          {/* Biografía */}
-          {profile?.bio ? (
-            <Text style={[styles.bio, { color: colors.subtitle }]} numberOfLines={3}>
-              {profile.bio}
-            </Text>
-          ) : (
-            <Text style={[styles.bio, { color: colors.muted }]}>
-              No bio yet
-            </Text>
-          )}
-          
-          {/* Preferencias/Intereses */}
-          {profile?.intereses && profile.intereses.length > 0 && (
-            <View style={styles.interestsPreview}>
-              {profile.intereses.slice(0, 3).map((interes, index) => (
-                <View 
-                  key={index}
-                  style={[styles.interestTag, { backgroundColor: colors.primary + '20' }]}
-                >
-                  <Text style={[styles.interestTagText, { color: colors.primary }]}>
-                    {interes}
-                  </Text>
-                </View>
-              ))}
-              {profile.intereses.length > 3 && (
-                <Text style={[styles.moreInterests, { color: colors.subtitle }]}>
-                  +{profile.intereses.length - 3} more
-                </Text>
-              )}
-            </View>
-          )}
-          
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={handleOpenEditModal}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="create-outline" size={20} color={colors.primary} />
-            <Text style={[styles.editButtonText, { color: colors.primary }]}>
-              Editar Perfil
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Header con foto de perfil, nombre, bio, etc. - Componente modular */}
+        <ProfileHeader 
+          user={profile} 
+          onEditPress={handleOpenEditModal}
+        />
 
-        {/* Dashboard Section
-        <View style={styles.dashboardSection}>
-          <Text style={styles.sectionTitle}>Dashboard</Text>
-          
-          <View style={styles.dashboardGrid}>
-            <View style={[styles.dashboardCard, { backgroundColor: '#A8E6CF' }]}>
-              <View style={[styles.cardIconContainer, { backgroundColor: '#ffffff40' }]}>
-                <Ionicons name="heart" size={24} color="#2d5f4d" />
-              </View>
-              <Text style={[styles.cardValue, { color: '#2d5f4d' }]}>
-                {horasTotales} hrs
-              </Text>
-              <Text style={[styles.cardLabel, { color: '#2d5f4d' }]}>
-                Hours Logged
-              </Text>
-              <Text style={[styles.cardLabelLarge, { color: '#2d5f4d', fontSize: 11 }]}>
-                This is incredible time
-              </Text>
-            </View>
+        {/* Stats - Componente modular */}
+        <ProfileStats
+          postulacionesCount={postulaciones.length}
+          horasTotales={horasTotales}
+          eventosProximos={eventosProximos}
+        />
 
-            <View style={[styles.dashboardCardLarge, { backgroundColor: colors.surface }]}>
-              <View style={[styles.cardIconContainer, { backgroundColor: colors.primary + '20' }]}>
-                <Ionicons name="calendar" size={24} color={colors.primary} />
-              </View>
-              <Text style={[styles.cardValue, { color: colors.text }]}>
-                {eventosProximos}
-              </Text>
-              <Text style={[styles.cardLabel]}>Upcoming Events</Text>
-              <Text style={[styles.cardLabelLarge, { fontSize: 11 }]}>
-                {eventosProximos > 0 ? 'Postulaciones pendientes' : 'Sin eventos'}
-              </Text>
-            </View>
-          </View>
-        </View> */}
-
-        {/* Achievements Section
-        <View style={styles.impactSection}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
-          
-          <View style={styles.achievementsContainer}>
-            {achievements.map((achievement) => (
-              <TouchableOpacity
-                key={achievement.id}
-                onPress={() => handleAchievementPress(achievement)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.achievementBadge, { backgroundColor: achievement.color }]}>
-                  <View style={styles.achievementIconContainer}>
-                    <Ionicons name={achievement.icon as any} size={48} color={achievement.iconColor} />
-                  </View>
-                  {achievement.count && (
-                    <View style={styles.achievementBadgeCount}>
-                      <Text style={styles.achievementBadgeCountText}>x{achievement.count}</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View> */}
+        {/* Achievements - Componente modular
+        <AchievementsList
+          achievements={achievements}
+          onAchievementPress={handleAchievementPress}
+        /> */}
 
         {/* Activity Feed Section */}
         <View style={styles.activitySection}>
@@ -1202,61 +776,12 @@ const ProfileScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Modal de Achievement */}
-      <Modal
+      {/* Modal de Achievement - Componente modular */}
+      <AchievementModal
         visible={achievementModalVisible}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setAchievementModalVisible(false)}
-      >
-        <View style={styles.achievementModalOverlay}>
-          <View style={[styles.achievementModalContent, { backgroundColor: colors.surface }]}>
-            <TouchableOpacity
-              style={styles.achievementModalClose}
-              onPress={() => setAchievementModalVisible(false)}
-            >
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-
-            {selectedAchievement && (
-              <>
-                <View style={[
-                  styles.achievementModalBadge,
-                  { backgroundColor: selectedAchievement.color }
-                ]}>
-                  <Ionicons 
-                    name={selectedAchievement.icon as any} 
-                    size={64} 
-                    color={selectedAchievement.iconColor} 
-                  />
-                  {achievements.find(a => a.id === achievements.findIndex(ach => ach.icon === selectedAchievement.icon) + 1)?.count && (
-                    <View style={[styles.achievementBadgeCount, { top: -8, right: -8 }]}>
-                      <Text style={styles.achievementBadgeCountText}>
-                        x{achievements.find(a => a.icon === selectedAchievement.icon)?.count}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                <Text style={[styles.achievementModalTitle, { color: colors.text }]}>
-                  {selectedAchievement.title}
-                </Text>
-                
-                <Text style={[styles.achievementModalDescription, { color: colors.subtitle }]}>
-                  {selectedAchievement.description}
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.achievementModalButton, { backgroundColor: colors.primary }]}
-                  onPress={() => setAchievementModalVisible(false)}
-                >
-                  <Text style={styles.achievementModalButtonText}>¡Genial!</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        achievement={selectedAchievement}
+        onClose={() => setAchievementModalVisible(false)}
+      />
 
       {/* Modal de Editar Perfil */}
       <Modal
@@ -1280,12 +805,15 @@ const ProfileScreen = () => {
             </View>
 
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-              {/* Avatar con ImagePicker */}
+              {/* Avatar con CloudinaryImagePicker */}
               <View style={styles.avatarSection}>
-                <ImagePicker
+                <CloudinaryImagePicker
                   currentImageUri={editForm.avatar}
+                  currentPublicId={editForm.avatarPublicId}
                   onImageSelected={handleImageSelected}
-                  folder="avatars"
+                  folder="AVATARS"
+                  transformationType="avatar"
+                  size={120}
                   aspectRatio={[1, 1]}
                   quality={0.8}
                 />
