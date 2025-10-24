@@ -8,7 +8,7 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { PostulacionFormData, COLLECTIONS, Oportunidad } from '../types';
 
 export const usePostulacion = () => {

@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../store/useAuthStore';
-import { useThemeColors } from '../hooks/useThemeColors';
+import { useAuthStore } from '../../src/store/useAuthStore';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useGoogleSignIn } from '../../src/hooks/useGoogleSignIn';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');

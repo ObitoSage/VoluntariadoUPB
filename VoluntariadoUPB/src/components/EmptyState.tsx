@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../app/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface EmptyStateProps {
   icon: string;

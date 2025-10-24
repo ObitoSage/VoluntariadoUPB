@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Oportunidad, CATEGORIAS } from '../types';
-import { useThemeColors } from '../../app/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

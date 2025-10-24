@@ -13,10 +13,9 @@ FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../hooks/useThemeColors';
-import { useVoluntariadoStore } from '../../store/voluntariadoStore';
+import { useThemeColors } from '../../../src/hooks/useThemeColors';
+import { useVoluntariadoStore } from '../../../src/store/voluntariadoStore';
 import type { ThemeColors } from '../../theme/colors';
-import { SeedDatabaseButton } from '../../../src/components/SeedDataBaseButton';
 
 const { width: screenWidth } = Dimensions.get('window');
 

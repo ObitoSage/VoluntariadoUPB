@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
-import { useAuthStore } from './store/useAuthStore';
+import { useAuthStore } from '../src/store/useAuthStore';
 
 export default function HomeRedirect() {
   const { user, isLoading } = useAuthStore();

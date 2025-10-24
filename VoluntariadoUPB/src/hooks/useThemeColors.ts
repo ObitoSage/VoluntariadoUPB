@@ -1,5 +1,5 @@
 import { useThemeStore } from '../store/useThemeStore';
-import { palette } from '../theme/colors';
+import { palette } from '../../app/theme/colors';
 
 export const useThemeColors = () => {
   const theme = useThemeStore((state) => state.theme);

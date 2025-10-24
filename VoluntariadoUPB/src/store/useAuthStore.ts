@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword, 
   signOut,
   onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithCredential,
   User
 } from 'firebase/auth';
 import { auth } from '../../config/firebase';
@@ -16,6 +18,7 @@ interface AuthState {
   // Acciones
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setError: (error: string | null) => void;
@@ -71,6 +74,24 @@ export const useAuthStore = create<AuthState>((set) => ({
         case 'auth/user-disabled':
           errorMessage = 'Esta cuenta ha sido deshabilitada';
           break;
+      }
+      
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  signInWithGoogle: async (idToken: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const credential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      set({ user: userCredential.user, isLoading: false });
+    } catch (error: any) {
+      let errorMessage = 'Error al iniciar sesión con Google';
+      
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = 'Ya existe una cuenta con este correo usando otro método';
       }
       
       set({ error: errorMessage, isLoading: false });

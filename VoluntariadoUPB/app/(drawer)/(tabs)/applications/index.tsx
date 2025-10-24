@@ -12,7 +12,7 @@ ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
 import type { ThemeColors } from '../../../theme/colors';
 

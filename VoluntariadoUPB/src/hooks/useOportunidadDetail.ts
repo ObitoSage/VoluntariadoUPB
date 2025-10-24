@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { Oportunidad, COLLECTIONS } from '../types';
 
 export const useOportunidadDetail = (oportunidadId: string) => {

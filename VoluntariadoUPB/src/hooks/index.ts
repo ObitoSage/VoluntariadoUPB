@@ -4,3 +4,5 @@ export { usePostulacion } from './usePostulacion';
 export { usePostulaciones } from './usePostulaciones';
 export { useUserProfile } from './useUserProfile';
 export { useFirebaseStorage } from './useFirebaseStorage';
+export { useGoogleSignIn } from './useGoogleSignIn';
+export { useThemeColors } from './useThemeColors';

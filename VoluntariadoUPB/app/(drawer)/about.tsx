@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../hooks/useThemeColors';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 export default function AboutScreen() {
   const { colors } = useThemeColors();

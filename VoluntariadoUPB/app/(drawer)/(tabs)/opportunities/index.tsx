@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { useOportunidades } from '../../../../src/hooks/useOportunidades';
 import { useOportunidadesStore } from '../../../../src/store/oportunidadesStore';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 
 const ApplicationsLayout = () => {
 const { colors } = useThemeColors();

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { useThemeColors } from '../../app/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface LoadingSkeletonProps {
   type: 'card' | 'detail' | 'list';

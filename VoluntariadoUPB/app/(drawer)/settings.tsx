@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, Switch, Text, View, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../hooks/useThemeColors';
-import { useThemeStore } from '../store/useThemeStore';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeStore } from '../../src/store/useThemeStore';
 import type { ThemeColors } from '../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
