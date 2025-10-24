@@ -196,14 +196,14 @@ const SettingsScreen = () => {
           <View style={styles.card}>
             <View style={[styles.preferenceRow, { paddingVertical: 8 }]}>
               <Text style={styles.preferenceDescription}>Versión</Text>
-              <Text style={[styles.preferenceLabel, { fontSize: 14 }]}>1.0.0</Text>
+              <Text style={[styles.preferenceLabel, { fontSize: 14 }]}>1.0.1</Text>
             </View>
             
             <View style={styles.divider} />
             
             <View style={[styles.preferenceRow, { paddingVertical: 8 }]}>
               <Text style={styles.preferenceDescription}>Desarrollado por</Text>
-              <Text style={[styles.preferenceLabel, { fontSize: 14 }]}>UPB</Text>
+              <Text style={[styles.preferenceLabel, { fontSize: 14 }]}>Camilo - Edwin - Fabian</Text>
             </View>
           </View>
         </View>
