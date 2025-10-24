@@ -125,10 +125,40 @@ export const useUserProfile = () => {
     }
   };
 
-  const uploadAvatar = async (imageUri: string): Promise<{ success: boolean; url?: string }> => {
-    // Esta función se implementará con useFirebaseStorage
-    // Por ahora retornamos un placeholder
-    return { success: false };
+  const uploadAvatar = async (
+    imageUrl: string,
+    publicId?: string
+  ): Promise<{ success: boolean; url?: string }> => {
+    if (!authUser?.uid) {
+      setError('Usuario no autenticado');
+      return { success: false };
+    }
+
+    try {
+      setLoading(true);
+      
+      // Actualizar el perfil con la nueva imagen
+      const updateData: UserProfileUpdate = {
+        avatar: imageUrl,
+      };
+      
+      if (publicId) {
+        updateData.avatarPublicId = publicId;
+      }
+      
+      const result = await updateProfile(updateData);
+      setLoading(false);
+      
+      return { 
+        success: result.success, 
+        url: imageUrl 
+      };
+    } catch (err: any) {
+      console.error('Error uploading avatar:', err);
+      setError('Error al subir el avatar');
+      setLoading(false);
+      return { success: false };
+    }
   };
 
   return {
