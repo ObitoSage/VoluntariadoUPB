@@ -11,6 +11,8 @@ ImageBackground,
 Dimensions,
 FlatList,
 ActivityIndicator,
+Linking,
+Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -294,6 +296,32 @@ StyleSheet.create({
     color: colors.subtitle,
     marginLeft: 8,
     },
+    contactButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    width: '100%',
+    },
+    contactButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    },
+    contactButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    },
 });
 
 type CarouselImageSource = ReturnType<typeof require>;
@@ -326,6 +354,37 @@ const handleNavigateToOportunidad = () => {
     setTimeout(() => {
         router.push(`/(drawer)/(tabs)/opportunities/${nextActivity.id}` as any);
     }, 100);
+    }
+};
+
+const handleOpenWhatsApp = async () => {
+    const phoneNumber = '59177520037'; 
+    const url = `whatsapp://send?phone=${phoneNumber}`;
+    
+    try {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+        await Linking.openURL(url);
+    } else {
+        Alert.alert('Error', 'WhatsApp no está instalado en este dispositivo');
+    }
+    } catch (error) {
+    Alert.alert('Error', 'No se pudo abrir WhatsApp');
+    }
+};
+
+const handleOpenInstagram = async () => {
+    const instagramUrl = 'https://www.instagram.com/studentlife_upblpz/';
+    
+    try {
+    const supported = await Linking.canOpenURL(instagramUrl);
+    if (supported) {
+        await Linking.openURL(instagramUrl);
+    } else {
+        Alert.alert('Error', 'No se pudo abrir Instagram');
+    }
+    } catch (error) {
+    Alert.alert('Error', 'No se pudo abrir el enlace');
     }
 };
 
@@ -501,9 +560,23 @@ return (
             <Text style={styles.coordinatorContactText}>paolalopez@upb.edu</Text>
             </View>
             
-            <View style={styles.coordinatorContactContainer}>
-            <Ionicons name="call-outline" size={16} color={colors.primary} />
-            <Text style={styles.coordinatorContactText}>77520037</Text>
+            {/* Contact Buttons */}
+            <View style={styles.contactButtonsContainer}>
+            <TouchableOpacity 
+                style={[styles.contactButton, { backgroundColor: '#25D366' }]}
+                onPress={handleOpenWhatsApp}
+            >
+                <Ionicons name="logo-whatsapp" size={24} color="#ffffff" />
+                <Text style={styles.contactButtonText}>WhatsApp</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+                style={[styles.contactButton, { backgroundColor: '#E4405F' }]}
+                onPress={handleOpenInstagram}
+            >
+                <Ionicons name="logo-instagram" size={24} color="#ffffff" />
+                <Text style={styles.contactButtonText}>Instagram</Text>
+            </TouchableOpacity>
             </View>
         </View>
         </View>
