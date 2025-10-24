@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../src/store/useAuthStore';
+import { SplashScreen } from '../src/components';
 
 export default function HomeRedirect() {
   const { user, isLoading } = useAuthStore();
   const [checking, setChecking] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // Dar tiempo para que el listener de auth se inicialice
@@ -15,6 +17,11 @@ export default function HomeRedirect() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Mostrar splash screen primero
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   // Mostrar un indicador de carga mientras se verifica el estado de autenticación
   if (isLoading || checking) {
