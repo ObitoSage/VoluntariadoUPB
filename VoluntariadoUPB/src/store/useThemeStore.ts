@@ -1,7 +1,7 @@
 import { Appearance } from 'react-native';
 import { create } from 'zustand';
 
-import type { Theme } from '../theme/colors';
+import type { Theme } from '../../app/theme/colors';
 
 const initialTheme: Theme = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
 

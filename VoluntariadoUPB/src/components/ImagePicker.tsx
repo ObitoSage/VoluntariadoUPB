@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import * as ImagePickerExpo from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../app/hooks/useThemeColors';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { useFirebaseStorage } from '../hooks/useFirebaseStorage';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface ImagePickerProps {
   currentImageUri?: string;

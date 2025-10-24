@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { User, UserProfileUpdate, COLLECTIONS } from '../types';
 
 export const useUserProfile = () => {

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function LogoutScreen() {
   const { logout } = useAuthStore();

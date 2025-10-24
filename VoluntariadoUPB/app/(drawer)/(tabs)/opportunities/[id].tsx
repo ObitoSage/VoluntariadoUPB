@@ -20,8 +20,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
-import { useAuthStore } from '../../../store/useAuthStore';
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useAuthStore } from '../../../../src/store/useAuthStore';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
 

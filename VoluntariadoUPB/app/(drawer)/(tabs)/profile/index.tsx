@@ -17,12 +17,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import type { ThemeColors } from '../../../theme/colors';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
 import { useFavoriteOportunidades } from '../../../../src/hooks/useFavoriteOportunidades';
-import { useAuthStore } from '../../../store/useAuthStore';
+import { useAuthStore } from '../../../../src/store/useAuthStore';
 import { ImagePicker } from '../../../../src/components/ImagePicker';
 import { CAMPUS_OPTIONS, CATEGORIAS } from '../../../../src/types';
 import type { User } from '../../../../src/types';

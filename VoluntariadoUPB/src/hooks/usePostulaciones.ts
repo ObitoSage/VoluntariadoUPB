@@ -8,7 +8,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { COLLECTIONS } from '../types';
 
 export interface Postulacion {

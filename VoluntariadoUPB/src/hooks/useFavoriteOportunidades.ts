@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Oportunidad, COLLECTIONS } from '../types';
-import { useAuthStore } from '../../app/store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 export const useFavoriteOportunidades = () => {
   const { user: authUser } = useAuthStore();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 
 export default function OportunidadesLayout() {
   const { colors } = useThemeColors();
