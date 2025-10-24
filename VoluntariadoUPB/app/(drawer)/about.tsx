@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 
@@ -13,8 +13,12 @@ export default function AboutScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '20' }]}>
-          <Ionicons name="heart" size={64} color={colors.primary} />
+        <View style={styles.iconContainer}>
+          <Image 
+            source={require('../../assets/plantiniNerd.png')} 
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
         </View>
         
         <Text style={[styles.title, { color: colors.text }]}>
@@ -82,7 +86,7 @@ export default function AboutScreen() {
 
       <View style={[styles.footer, { backgroundColor: colors.surface }]}>
         <Text style={[styles.version, { color: colors.subtitle }]}>
-          Versión 1.0.0 - MVP
+          Versión 1.0.1
         </Text>
         <Text style={[styles.footerText, { color: colors.subtitle }]}>
           © 2025 Universidad Privada Boliviana
@@ -111,13 +115,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     marginBottom: 20,
+  },
+  mascotImage: {
+    width: 120,
+    height: 120,
   },
   title: {
     fontSize: 28,
