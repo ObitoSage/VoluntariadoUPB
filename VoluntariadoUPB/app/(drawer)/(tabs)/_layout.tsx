@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -8,17 +9,18 @@ const TabsLayout = () => {
   const { colors } = useThemeColors();
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: {
-          backgroundColor: colors.tabBarBackground,
-          borderTopColor: colors.border,
-        },
-      }}
-    >
+    <View style={{ flex: 1 }}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.muted,
+          tabBarStyle: {
+            backgroundColor: colors.tabBarBackground,
+            borderTopColor: colors.border,
+          },
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -59,7 +61,8 @@ const TabsLayout = () => {
           ),
         }}
       />
-    </Tabs>
+      </Tabs>
+    </View>
   );
 };
 
