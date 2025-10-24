@@ -431,10 +431,6 @@ const renderEmptyState = () => (
         Aún no has aplicado a ningún voluntariado.{'\n'}
         Explora las oportunidades disponibles y comienza a hacer la diferencia.
     </Text>
-    <TouchableOpacity style={styles.emptyActionButton}>
-        <Ionicons name="add-circle-outline" size={20} color="#ffffff" />
-        <Text style={styles.emptyActionText}>Explorar Oportunidades</Text>
-    </TouchableOpacity>
     </View>
 );
 
