@@ -1,9 +1,27 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  ScrollView, 
+  Image, 
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../../hooks/useThemeColors';
 import type { ThemeColors } from '../../../theme/colors';
+import { useUserProfile } from '../../../../src/hooks/useUserProfile';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { ImagePicker } from '../../../../src/components/ImagePicker';
+import { CAMPUS_OPTIONS } from '../../../../src/types';
+import type { User } from '../../../../src/types';
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -16,19 +34,25 @@ const createStyles = (colors: ThemeColors) =>
     },
     header: {
       alignItems: 'center',
-      paddingTop: 40,
-      paddingBottom: 24,
+      paddingTop: 20,
+      paddingBottom: 32,
       paddingHorizontal: 24,
+      position: 'relative',
     },
     profileImageContainer: {
       width: 120,
       height: 120,
       borderRadius: 60,
-      borderWidth: 3,
+      borderWidth: 4,
       borderColor: colors.primary,
-      marginBottom: 16,
+      marginBottom: 20,
       overflow: 'hidden',
       backgroundColor: colors.surface,
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
     },
     profileImage: {
       width: '100%',
@@ -57,14 +81,15 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.subtitle,
     },
     dashboardSection: {
-      paddingHorizontal: 24,
-      marginBottom: 24,
+      paddingHorizontal: 20,
+      marginBottom: 28,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 16,
+      letterSpacing: 0.3,
     },
     dashboardGrid: {
       flexDirection: 'row',
@@ -119,8 +144,8 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     impactSection: {
-      paddingHorizontal: 24,
-      marginBottom: 24,
+      paddingHorizontal: 20,
+      marginBottom: 28,
     },
     impactGrid: {
       flexDirection: 'row',
@@ -162,7 +187,7 @@ const createStyles = (colors: ThemeColors) =>
       textAlign: 'center',
     },
     activitySection: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
     },
     activityList: {
       gap: 12,
@@ -216,16 +241,243 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: '600',
       color: colors.primary,
     },
+    editButton: {
+      position: 'absolute',
+      top: 12,
+      right: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
+    },
+    editButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    // Modal styles
+    modalContainer: {
+      flex: 1,
+    },
+    modalKeyboardView: {
+      flex: 1,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+    },
+    modalContent: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      marginBottom: 32,
+      paddingVertical: 20,
+    },
+    formGroup: {
+      marginBottom: 24,
+    },
+    formLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    input: {
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 15,
+      minHeight: 48,
+    },
+    textArea: {
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 15,
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    textAreaFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    charCount: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    errorText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#FF6B6B',
+      marginTop: 4,
+    },
+    campusGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    campusOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      gap: 8,
+      flex: 1,
+      minWidth: '45%',
+      maxWidth: '48%',
+    },
+    campusLabel: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    interestInputContainer: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 16,
+      alignItems: 'center',
+    },
+    interestInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 15,
+      minHeight: 48,
+    },
+    addInterestButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    interestsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 8,
+    },
+    interestChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 20,
+      gap: 8,
+      minHeight: 36,
+    },
+    interestChipText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    modalFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    submitButton: {
+      flex: 1,
+      flexDirection: 'row',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    submitButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '700',
+    },
   });
 
 const ProfileScreen = () => {
   const { colors } = useThemeColors();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  
+  const currentUser = useAuthStore((state) => state.user);
+  const { user: profile, loading, updateProfile } = useUserProfile();
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form state
+  const [editForm, setEditForm] = useState<Partial<User>>({
+    nombre: '',
+    bio: '',
+    campus: '',
+    carrera: '',
+    semestre: 0,
+    telefono: '',
+    avatar: '',
+    intereses: [],
+  });
+  
+  const [newInterest, setNewInterest] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Cargar datos del perfil al abrir el modal
+  useEffect(() => {
+    if (modalVisible && profile) {
+      setEditForm({
+        nombre: profile.nombre || '',
+        bio: profile.bio || '',
+        campus: profile.campus || '',
+        carrera: profile.carrera || '',
+        semestre: profile.semestre || 0,
+        telefono: profile.telefono || '',
+        avatar: profile.avatar || '',
+        intereses: profile.intereses || [],
+      });
+    }
+  }, [modalVisible, profile]);
 
   // Mock data (siguiendo el patrón del proyecto)
   const userData = {
-    name: 'Administrator',
-    hoursLogged: 150,
+    name: profile?.nombre || 'Administrator',
+    hoursLogged: 0,
     upcomingEvents: 3,
     badgesEarned: 12,
     certificates: 5,
@@ -259,6 +511,82 @@ const ProfileScreen = () => {
     },
   ];
 
+  // Validación del formulario
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!editForm.nombre?.trim()) {
+      newErrors.nombre = 'El nombre es requerido';
+    }
+    
+    if (editForm.bio && editForm.bio.length > 300) {
+      newErrors.bio = 'La biografía no puede exceder 300 caracteres';
+    }
+    
+    if (editForm.telefono && !/^\+?\d{8,15}$/.test(editForm.telefono.replace(/\s/g, ''))) {
+      newErrors.telefono = 'Formato de teléfono inválido';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handlers
+  const handleOpenEditModal = () => {
+    setModalVisible(true);
+  };
+
+  const handleCancelEdit = () => {
+    setModalVisible(false);
+    setErrors({});
+    setNewInterest('');
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Error', 'Por favor corrige los errores en el formulario');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await updateProfile(editForm);
+      if (result.success) {
+        Alert.alert('Éxito', 'Perfil actualizado correctamente');
+        setModalVisible(false);
+      } else {
+        Alert.alert('Error', 'No se pudo actualizar el perfil');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'No se pudo actualizar el perfil');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleImageSelected = (url: string) => {
+    setEditForm({ ...editForm, avatar: url });
+  };
+
+  const handleAddInterest = () => {
+    const trimmedInterest = newInterest.trim();
+    if (trimmedInterest && !editForm.intereses?.includes(trimmedInterest)) {
+      setEditForm({
+        ...editForm,
+        intereses: [...(editForm.intereses || []), trimmedInterest],
+      });
+      setNewInterest('');
+    }
+  };
+
+  const handleRemoveInterest = (interest: string) => {
+    setEditForm({
+      ...editForm,
+      intereses: editForm.intereses?.filter((i) => i !== interest) || [],
+    });
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -268,12 +596,34 @@ const ProfileScreen = () => {
       >
         {/* Header con foto de perfil */}
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={handleOpenEditModal}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={20} color={colors.primary} />
+            <Text style={[styles.editButtonText, { color: colors.primary }]}>
+              Editar Perfil
+            </Text>
+          </TouchableOpacity>
+          
           <View style={styles.profileImageContainer}>
-            <View style={styles.profilePlaceholder}>
-              <Ionicons name="person" size={64} color={colors.primary} />
-            </View>
+            {profile?.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.profilePlaceholder}>
+                <Ionicons name="person" size={64} color={colors.primary} />
+              </View>
+            )}
           </View>
+          
           <Text style={styles.name}>{userData.name}</Text>
+          {profile?.email && (
+            <Text style={styles.studentId}>{profile.email}</Text>
+          )}
+          {profile?.carrera && (
+            <Text style={styles.career}>{profile.carrera}</Text>
+          )}
         </View>
 
         {/* Dashboard Section */}
@@ -384,6 +734,304 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal de Editar Perfil */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={handleCancelEdit}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardView}
+          >
+            {/* Header del Modal */}
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <TouchableOpacity onPress={handleCancelEdit}>
+                <Ionicons name="close" size={28} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Editar Perfil</Text>
+              <View style={{ width: 28 }} />
+            </View>
+
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              {/* Avatar con ImagePicker */}
+              <View style={styles.avatarSection}>
+                <ImagePicker
+                  currentImageUri={editForm.avatar}
+                  onImageSelected={handleImageSelected}
+                  folder="avatars"
+                  aspectRatio={[1, 1]}
+                  quality={0.8}
+                />
+              </View>
+
+              {/* Nombre */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Nombre Completo *
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: colors.surface,
+                      borderColor: errors.nombre ? '#FF6B6B' : colors.border,
+                      color: colors.text 
+                    }
+                  ]}
+                  placeholder="Tu nombre completo"
+                  placeholderTextColor={colors.subtitle}
+                  value={editForm.nombre}
+                  onChangeText={(text) => {
+                    setEditForm({ ...editForm, nombre: text });
+                    if (errors.nombre) {
+                      const newErrors = { ...errors };
+                      delete newErrors.nombre;
+                      setErrors(newErrors);
+                    }
+                  }}
+                />
+                {errors.nombre && (
+                  <Text style={styles.errorText}>{errors.nombre}</Text>
+                )}
+              </View>
+
+              {/* Biografía */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Biografía
+                </Text>
+                <TextInput
+                  style={[
+                    styles.textArea,
+                    { 
+                      backgroundColor: colors.surface,
+                      borderColor: errors.bio ? '#FF6B6B' : colors.border,
+                      color: colors.text 
+                    }
+                  ]}
+                  placeholder="Cuéntanos sobre ti..."
+                  placeholderTextColor={colors.subtitle}
+                  multiline
+                  numberOfLines={4}
+                  value={editForm.bio}
+                  onChangeText={(text) => {
+                    setEditForm({ ...editForm, bio: text });
+                    if (errors.bio) {
+                      const newErrors = { ...errors };
+                      delete newErrors.bio;
+                      setErrors(newErrors);
+                    }
+                  }}
+                  textAlignVertical="top"
+                  maxLength={300}
+                />
+                <View style={styles.textAreaFooter}>
+                  {errors.bio && (
+                    <Text style={styles.errorText}>{errors.bio}</Text>
+                  )}
+                  <Text style={[styles.charCount, { color: colors.subtitle }]}>
+                    {editForm.bio?.length || 0}/300
+                  </Text>
+                </View>
+              </View>
+
+              {/* Campus */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Campus
+                </Text>
+                <View style={styles.campusGrid}>
+                  {CAMPUS_OPTIONS.map((campus) => (
+                    <TouchableOpacity
+                      key={campus}
+                      style={[
+                        styles.campusOption,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: editForm.campus === campus ? colors.primary : colors.border,
+                          borderWidth: editForm.campus === campus ? 2 : 1,
+                        }
+                      ]}
+                      onPress={() => setEditForm({ ...editForm, campus: campus })}
+                    >
+                      <Ionicons 
+                        name="location" 
+                        size={20} 
+                        color={editForm.campus === campus ? colors.primary : colors.subtitle} 
+                      />
+                      <Text style={[
+                        styles.campusLabel,
+                        { color: editForm.campus === campus ? colors.text : colors.subtitle }
+                      ]}>
+                        {campus}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Carrera */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Carrera
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      color: colors.text 
+                    }
+                  ]}
+                  placeholder="Ej: Ingeniería de Sistemas"
+                  placeholderTextColor={colors.subtitle}
+                  value={editForm.carrera}
+                  onChangeText={(text) => setEditForm({ ...editForm, carrera: text })}
+                />
+              </View>
+
+              {/* Semestre */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Semestre
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      color: colors.text 
+                    }
+                  ]}
+                  placeholder="Ej: 5"
+                  placeholderTextColor={colors.subtitle}
+                  keyboardType="numeric"
+                  value={editForm.semestre?.toString() || ''}
+                  onChangeText={(text) => setEditForm({ ...editForm, semestre: parseInt(text) || 0 })}
+                />
+              </View>
+
+              {/* Teléfono */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Teléfono
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: colors.surface,
+                      borderColor: errors.telefono ? '#FF6B6B' : colors.border,
+                      color: colors.text 
+                    }
+                  ]}
+                  placeholder="+591 70000000"
+                  placeholderTextColor={colors.subtitle}
+                  keyboardType="phone-pad"
+                  value={editForm.telefono}
+                  onChangeText={(text) => {
+                    setEditForm({ ...editForm, telefono: text });
+                    if (errors.telefono) {
+                      const newErrors = { ...errors };
+                      delete newErrors.telefono;
+                      setErrors(newErrors);
+                    }
+                  }}
+                />
+                {errors.telefono && (
+                  <Text style={styles.errorText}>{errors.telefono}</Text>
+                )}
+              </View>
+
+              {/* Intereses */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Áreas de Interés
+                </Text>
+                <View style={styles.interestInputContainer}>
+                  <TextInput
+                    style={[
+                      styles.interestInput,
+                      { 
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                        color: colors.text 
+                      }
+                    ]}
+                    placeholder="Agregar interés"
+                    placeholderTextColor={colors.subtitle}
+                    value={newInterest}
+                    onChangeText={setNewInterest}
+                    onSubmitEditing={handleAddInterest}
+                  />
+                  <TouchableOpacity
+                    style={[styles.addInterestButton, { backgroundColor: colors.primary }]}
+                    onPress={handleAddInterest}
+                  >
+                    <Ionicons name="add" size={24} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.interestsContainer}>
+                  {editForm.intereses?.map((interest, index) => (
+                    <View 
+                      key={index}
+                      style={[styles.interestChip, { backgroundColor: colors.primary + '20' }]}
+                    >
+                      <Text style={[styles.interestChipText, { color: colors.primary }]}>
+                        {interest}
+                      </Text>
+                      <TouchableOpacity onPress={() => handleRemoveInterest(interest)}>
+                        <Ionicons name="close-circle" size={18} color={colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+
+            {/* Footer del Modal */}
+            <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+              <TouchableOpacity
+                style={[styles.cancelButton, { borderColor: colors.border }]}
+                onPress={handleCancelEdit}
+                disabled={isSubmitting}
+              >
+                <Text style={[styles.cancelButtonText, { color: colors.text }]}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: colors.primary },
+                  isSubmitting && { opacity: 0.6 }
+                ]}
+                onPress={handleSubmitEdit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Text style={styles.submitButtonText}>Guardando...</Text>
+                ) : (
+                  <>
+                    <Ionicons name="checkmark" size={20} color="#fff" />
+                    <Text style={styles.submitButtonText}>Guardar Cambios</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 };
