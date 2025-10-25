@@ -39,7 +39,6 @@ export interface Postulacion {
   applicationDate: Date;
   createdAt: Date;
   updatedAt: Date;
-  // Campos adicionales cuando se ve como admin/organizador
   estudianteNombre?: string;
   estudianteEmail?: string;
   estudianteFoto?: string;
@@ -48,7 +47,6 @@ export interface Postulacion {
 export const usePostulaciones = () => {
   const { user } = useAuthStore();
   const { canViewAllApplications } = useRolePermissions();
-  // Resolve permission once to avoid function identity changes causing repeated effect runs
   const canViewAll = canViewAllApplications ? canViewAllApplications() : false;
   const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
   const [loading, setLoading] = useState(false);

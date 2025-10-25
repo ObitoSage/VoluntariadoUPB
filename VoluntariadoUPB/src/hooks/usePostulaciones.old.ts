@@ -39,7 +39,6 @@ export interface Postulacion {
   applicationDate: Date;
   createdAt: Date;
   updatedAt: Date;
-  // Campos adicionales cuando se ve como admin/organizador
   estudianteNombre?: string;
   estudianteEmail?: string;
   estudianteFoto?: string;
@@ -61,7 +60,6 @@ export const usePostulaciones = () => {
 
     setLoading(true);
     
-    // Query diferente según el rol del usuario
     const q = canViewAllApplications()
       ? query(collection(db, COLLECTIONS.POSTULACIONES))
       : query(
@@ -100,7 +98,6 @@ export const usePostulaciones = () => {
         const postulacionesPromises = snapshot.docs.map(async (doc) => {
           const data = doc.data();
           
-          // Obtener información del estudiante si es admin u organizador
           let estudianteData = {};
           if (canViewAllApplications) {
             const estudianteDoc = await getDoc(doc(db, COLLECTIONS.USUARIOS, data.estudianteId));
@@ -125,7 +122,6 @@ export const usePostulaciones = () => {
 
         const postulacionesData = await Promise.all(postulacionesPromises);
 
-        // Ordenar en memoria por fecha de creación (más reciente primero)
         postulacionesData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
         setPostulaciones(postulacionesData);
@@ -147,7 +143,6 @@ export const usePostulaciones = () => {
     
     setRefreshing(true);
     try {
-      // Query sin orderBy para evitar necesidad de índice compuesto
       const q = query(
         collection(db, COLLECTIONS.POSTULACIONES),
         where('estudianteId', '==', user.uid)
@@ -165,7 +160,6 @@ export const usePostulaciones = () => {
         } as Postulacion;
       });
 
-      // Ordenar en memoria por fecha de creación (más reciente primero)
       postulacionesData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
       setPostulaciones(postulacionesData);

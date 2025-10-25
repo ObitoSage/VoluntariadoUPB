@@ -22,7 +22,6 @@ export const useOportunidadDetail = (oportunidadId: string) => {
       try {
         setLoading(true);
         
-        // Obtener la oportunidad
         const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, oportunidadId);
         const oportunidadSnap = await getDoc(oportunidadRef);
 
@@ -34,7 +33,6 @@ export const useOportunidadDetail = (oportunidadId: string) => {
           
           setOportunidad(oportunidadData);
 
-          // Verificar si el usuario ya se postuló
           if (user?.uid) {
             const postulacionesRef = collection(db, COLLECTIONS.POSTULACIONES);
             const q = query(
