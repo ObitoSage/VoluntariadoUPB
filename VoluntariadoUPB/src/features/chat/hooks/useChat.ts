@@ -22,14 +22,12 @@ export function useChat(initialChatId?: string) {
   const chatId = initialChatId ?? store.currentChatId ?? makeId();
   const api = useMemo(() => new ChatApi(chatId), [chatId]);
 
-  // Persist the chatId to the store so it survives across sessions/navigation
   useEffect(() => {
     try {
       if (chatId) store.setCurrentChatId(chatId);
     } catch (e) {
       // ignore
     }
-    // ensure we abort any inflight request when unmounting
     return () => {
       controllerRef.current?.abort();
     };
@@ -39,7 +37,6 @@ export function useChat(initialChatId?: string) {
     async (content: string, files?: { uri: string; name?: string; type?: string }[]) => {
       if (!content?.trim() && !files?.length) return;
 
-      // Check scope
       if (!isInScope(content)) {
         const msg: Message = {
           id: makeId(),
@@ -61,9 +58,8 @@ export function useChat(initialChatId?: string) {
       controllerRef.current = new AbortController();
       let accumulated = '';
 
-      // retry/backoff configuration
       const maxRetries = 2;
-      const baseDelay = 700; // ms
+      const baseDelay = 700; 
 
       try {
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -75,9 +71,7 @@ export function useChat(initialChatId?: string) {
               (chunk) => {
                 // incremental updates
                 accumulated += chunk;
-                // update or upsert model placeholder
                 const interim: Message = { id: 'plantini_placeholder', content: accumulated, role: 'model', timestamp: Date.now() };
-                // Replace last model placeholder or append
                 const existing = store.chats[chatId] ?? [];
                 const idx = existing.findIndex((m) => m.id === 'plantini_placeholder');
                 if (idx >= 0) {
@@ -90,32 +84,25 @@ export function useChat(initialChatId?: string) {
               }
             );
 
-            // success -> break out of retry loop
             break;
           } catch (err: any) {
-            // If aborted by user, rethrow to outer catch
             if (err?.name === 'AbortError') throw err;
-            // network/other error -> attempt retry unless out of attempts
             if (attempt < maxRetries) {
               const delay = baseDelay * Math.pow(2, attempt);
-              // small sleep
+
               await new Promise((res) => setTimeout(res, delay));
               continue;
             }
-            // no more retries -> rethrow
             throw err;
           }
         }
 
-        // finalize model message
         const final: Message = { id: makeId(), content: accumulated, role: 'model', timestamp: Date.now() };
-        // remove placeholder and append final
         const current = store.chats[chatId] ?? [];
         const filtered = current.filter((m) => m.id !== 'plantini_placeholder');
         store.setMessages(chatId, [...filtered, final]);
       } catch (err: any) {
         if (err?.name === 'AbortError') {
-          // aborted by user
           const abortMsg: Message = { id: makeId(), content: 'Respuesta cancelada.', role: 'model', timestamp: Date.now() };
           store.addMessage(chatId, abortMsg);
         } else {

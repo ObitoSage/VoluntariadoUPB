@@ -18,7 +18,6 @@ export default function RootLayout() {
         <Stack.Screen name="(drawer)" />
         <Slot />
       </Stack>
-      {/* Plantini floating button removed — assistant is now accessible only from Home */}
     </>
   );
 }

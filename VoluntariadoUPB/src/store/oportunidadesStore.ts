@@ -7,7 +7,6 @@ interface OportunidadesState {
   loading: boolean;
   error: string | null;
   
-  // Acciones
   setOportunidades: (oportunidades: Oportunidad[]) => void;
   setFiltros: (filtros: Partial<OportunidadesFiltros>) => void;
   clearFiltros: () => void;

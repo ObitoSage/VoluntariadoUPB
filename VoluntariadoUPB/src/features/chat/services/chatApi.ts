@@ -25,7 +25,6 @@ export default class ChatApi {
 
     if (files?.length) {
       files.forEach((f) => {
-        // In React Native fetch FormData, a file can be appended as { uri, name, type }
         form.append('files', {
           uri: f.uri,
           name: f.name ?? 'image.jpg',
@@ -38,18 +37,14 @@ export default class ChatApi {
       method: 'POST',
       body: form as any,
       signal,
-      // Don't set Content-Type; let fetch handle multipart boundary
+
     });
 
-    // Try streaming reader if available
-    // Some RN environments may not support response.body streaming; fallback to text
-    // @ts-ignore
+
     if (res.body && res.body.getReader) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      // eslint-disable-next-line no-constant-condition
       while (true) {
-        // eslint-disable-next-line no-await-in-loop
         const { value, done } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);

@@ -62,7 +62,7 @@ export interface User {
   bio?: string;
   carrera?: string;
   semestre?: number;
-  favoritos: string[]; // IDs de oportunidades
+  favoritos: string[]; 
   createdAt: Timestamp | Date;
 }
 

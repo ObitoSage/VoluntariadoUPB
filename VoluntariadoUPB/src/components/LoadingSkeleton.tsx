@@ -85,7 +85,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type, count = 
     );
   }
 
-  // type === 'list'
+
   return (
     <View style={[styles.container, { padding: 16 }]}>
       {Array.from({ length: count }).map((_, index) => (

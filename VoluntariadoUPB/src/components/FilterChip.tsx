@@ -60,11 +60,11 @@ const styles = StyleSheet.create({
     gap: 6,
     marginRight: 8,
     marginBottom: 8,
-    minHeight: 36, // Altura fija para todos los chips
+    minHeight: 36, 
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    lineHeight: 20, // Altura de línea consistente
+    lineHeight: 20, 
   },
 });

@@ -4,7 +4,6 @@ export { StatusBadge } from './StatusBadge';
 export { CategoriaBadge } from './CategoriaBadge';
 export { EmptyState } from './EmptyState';
 export { LoadingSkeleton } from './LoadingSkeleton';
-export { ImagePicker } from './ImagePicker';
 export { CloudinaryImagePicker } from './CloudinaryImagePicker';
 export { PostulacionDetailModal } from './PostulacionDetailModal';
 export { GoalModal } from './GoalModal';

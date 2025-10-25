@@ -23,7 +23,6 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   const [isFavoritePressed, setIsFavoritePressed] = React.useState(false);
 
   const handleCardPress = () => {
-    // Solo ejecutar onPress si no se presionó el botón de favorito
     if (!isFavoritePressed) {
       onPress();
     }
@@ -31,9 +30,7 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   };
 
   const handleFavoritePress = (e: any) => {
-    // Marcar que se presionó el botón de favorito
     setIsFavoritePressed(true);
-    // Prevenir propagación si está disponible
     if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }

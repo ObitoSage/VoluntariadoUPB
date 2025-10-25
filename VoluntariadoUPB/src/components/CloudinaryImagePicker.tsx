@@ -177,7 +177,7 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
     }
   };
 
-  // Determinar la URL a mostrar
+
   const displayUri = localUri || (currentPublicId ? getCloudinaryUrl(currentPublicId, transformationType) : undefined);
 
   return (
@@ -208,7 +208,6 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
             </View>
           )}
 
-          {/* Loading overlay con progreso */}
           {uploading && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -219,7 +218,7 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
           )}
         </TouchableOpacity>
 
-        {/* Camera icon button */}
+
         <TouchableOpacity 
           style={[
             styles.cameraButton,

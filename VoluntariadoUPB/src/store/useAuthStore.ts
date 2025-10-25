@@ -15,7 +15,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   
-  // Acciones
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: (idToken: string) => Promise<void>;
@@ -103,7 +102,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ isLoading: true, error: null });
       await signOut(auth);
-      // Esperamos un tick para asegurarnos de que Firebase procese el cambio
       await new Promise(resolve => setTimeout(resolve, 0));
       set({ user: null, isLoading: false });
     } catch (error: any) {
@@ -118,8 +116,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   clearError: () => set({ error: null }),
 }));
-
-// Listener para cambios en el estado de autenticación
 onAuthStateChanged(auth, (user) => {
   useAuthStore.getState().setUser(user);
 });

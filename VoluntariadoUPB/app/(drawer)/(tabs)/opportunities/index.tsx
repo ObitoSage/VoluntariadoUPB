@@ -147,7 +147,6 @@ export default function OportunidadesListScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Create Opportunity Modal */}
       <CreateOportunidadModal
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
@@ -418,7 +417,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, 
     paddingBottom: 8,
     alignItems: 'center',
-    height: 52, // Altura fija para evitar desbordamiento
+    height: 52, 
   },
   resultsSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
   resultsText: { fontSize: 14, fontWeight: '500' },
@@ -434,7 +433,7 @@ const styles = StyleSheet.create({
   chipContainer: { 
     flexDirection: 'row', 
     flexWrap: 'wrap',
-    alignItems: 'center', // Alinear verticalmente
+    alignItems: 'center', 
   },
   modalFooter: { paddingHorizontal: 20, paddingVertical: 16, borderTopWidth: 1 },
   applyButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center' },

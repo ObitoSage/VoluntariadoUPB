@@ -7,7 +7,6 @@ export const MessageList: React.FC<{ messages: Message[] }> = ({ messages }) => 
   const ref = useRef<FlatList>(null as any);
 
   useEffect(() => {
-    // Auto scroll to end when messages change
     if (ref.current && messages.length > 0) {
       setTimeout(() => ref.current?.scrollToEnd({ animated: true }), 100);
     }

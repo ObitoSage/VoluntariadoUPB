@@ -16,7 +16,6 @@ export const ChatInput: React.FC<{
     <View style={styles.container}>
       <TouchableOpacity
         onPress={async () => {
-          // forward to attach handler (image picker abstraction)
           if (onAttach) onAttach('');
         }}
         style={styles.attach}
