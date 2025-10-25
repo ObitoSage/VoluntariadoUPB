@@ -27,12 +27,11 @@ export const useOportunidades = () => {
 
   useEffect(() => {
     setLoading(true);
-    
+
     const constraints: QueryConstraint[] = [
       orderBy('createdAt', 'desc')
     ];
 
-    // Filtrar por búsqueda si existe
     if (filtros.busqueda) {
       const searchLower = filtros.busqueda.toLowerCase();
       constraints.push(
@@ -51,7 +50,6 @@ export const useOportunidades = () => {
           ...doc.data(),
         })) as Oportunidad[];
 
-        // Aplicar filtros del lado del cliente
         const filtered = applyClientFilters(oportunidadesData, filtros);
 
         setOportunidades(filtered);
@@ -65,13 +63,11 @@ export const useOportunidades = () => {
     );
 
     return () => unsubscribe();
-  }, [filtros.busqueda]); // Solo recargar cuando cambie la búsqueda
+  }, [filtros.busqueda]);
 
-  // Aplicar filtros cada vez que cambien
   useEffect(() => {
     if (oportunidades.length > 0) {
       const filtered = applyClientFilters(oportunidades, filtros);
-      // Solo actualizar si hay cambios reales
       if (JSON.stringify(filtered) !== JSON.stringify(oportunidades)) {
         setOportunidades(filtered);
       }
@@ -109,30 +105,24 @@ export const useOportunidades = () => {
   };
 };
 
-// Función auxiliar para aplicar filtros del lado del cliente
 function applyClientFilters(oportunidades: Oportunidad[], filtros: any): Oportunidad[] {
   return oportunidades.filter((opp) => {
-    // Filtrar por campus
     if (filtros.campus.length > 0 && !filtros.campus.includes(opp.campus)) {
       return false;
     }
 
-    // Filtrar por categoría
     if (filtros.categoria.length > 0 && !filtros.categoria.includes(opp.categoria)) {
       return false;
     }
 
-    // Filtrar por modalidad
     if (filtros.modalidad && opp.modalidad !== filtros.modalidad) {
       return false;
     }
 
-    // Filtrar por estado
     if (filtros.status.length > 0 && !filtros.status.includes(opp.status)) {
       return false;
     }
 
-    // Filtrar por habilidades
     if (filtros.habilidades.length > 0) {
       const hasAnySkill = filtros.habilidades.some((skill: string) =>
         opp.habilidades.includes(skill)

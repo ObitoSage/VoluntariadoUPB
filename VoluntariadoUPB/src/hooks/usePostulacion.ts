@@ -29,7 +29,6 @@ export const usePostulacion = () => {
       setLoading(true);
       setError(null);
 
-      // Crear la postulación
       const postulacionData = {
         estudianteId: user.uid,
         estudianteNombre: user.displayName || user.email || 'Usuario',
@@ -47,7 +46,6 @@ export const usePostulacion = () => {
 
       await addDoc(collection(db, COLLECTIONS.POSTULACIONES), postulacionData);
 
-      // Actualizar cupos disponibles
       const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, oportunidad.id);
       const newCuposDisponibles = oportunidad.cuposDisponibles - 1;
       
@@ -56,7 +54,6 @@ export const usePostulacion = () => {
         updatedAt: serverTimestamp(),
       };
 
-      // Si ya no hay cupos, cambiar status a waitlist
       if (newCuposDisponibles <= 0) {
         updateData.status = 'waitlist';
       }

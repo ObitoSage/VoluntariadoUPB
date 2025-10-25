@@ -25,13 +25,6 @@ export const useCloudinaryUpload = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
 
-  /**
-   * Sube una imagen a Cloudinary
-   * @param uri - URI local de la imagen
-   * @param folder - Folder en Cloudinary (usa CLOUDINARY_FOLDERS)
-   * @param filename - Nombre opcional del archivo
-   * @returns Resultado con URL y public_id
-   */
   const uploadImage = async (
     uri: string,
     folder: keyof typeof CLOUDINARY_FOLDERS = 'AVATARS',
@@ -57,7 +50,6 @@ export const useCloudinaryUpload = () => {
 
 
       const formData = new FormData();
-      
 
       let mimeType = blob.type;
       let extension = 'jpg';
@@ -76,24 +68,19 @@ export const useCloudinaryUpload = () => {
       const userId = user?.uid || 'anonymous';
       const finalFilename = filename || `${userId}_${timestamp}_${randomString}`;
 
-
       const fileObject: any = {
         uri: uri,
         type: mimeType,
         name: `${finalFilename}.${extension}`,
       };
 
-  
       formData.append('file', fileObject);
       formData.append('upload_preset', cloudinaryConfig.uploadPreset);
-
-      
 
       formData.append('tags', `user_${userId},${folder.toLowerCase()}`);
 
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`;
-
 
       const xhr = new XMLHttpRequest();
 
@@ -119,8 +106,7 @@ export const useCloudinaryUpload = () => {
             console.error(' Upload falló:');
             console.error('Status:', xhr.status);
             console.error('Response:', xhr.responseText);
-            
-            
+
             let errorMsg = `Upload failed with status ${xhr.status}`;
             try {
               const errorResponse = JSON.parse(xhr.responseText);
@@ -129,10 +115,8 @@ export const useCloudinaryUpload = () => {
                 errorMsg = errorResponse.error.message;
               }
             } catch (e) {
-            
             }
-            
-        
+
             if (xhr.status === 400) {
 
               if (xhr.responseText.includes('Invalid upload preset')) {
@@ -150,7 +134,7 @@ export const useCloudinaryUpload = () => {
             } else if (xhr.status === 403) {
               errorMsg = ' Acceso denegado. Verifica tu configuración de Cloudinary.';
             }
-            
+
             reject(new Error(errorMsg));
           }
         });
@@ -190,13 +174,7 @@ export const useCloudinaryUpload = () => {
   const deleteImage = async (publicId: string): Promise<{ success: boolean }> => {
     try {
       console.warn('Delete from Cloudinary requires backend implementation');
-      
-      // En producción, se deberia llamar al backend:
-      // const response = await fetch('YOUR_BACKEND/delete-image', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ publicId }),
-      // });
-      
+
       return { success: true };
     } catch (err: any) {
       console.error('Error deleting from Cloudinary:', err);

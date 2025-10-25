@@ -29,11 +29,10 @@ export const useUserProfile = () => {
           } as User;
           setUser(userData);
         } else {
-          // Si el usuario no existe en Firestore, crear perfil básico
           const newUser = {
             nombre: authUser.displayName || 'Usuario',
             email: authUser.email || '',
-            avatar: authUser.photoURL || '', // Usar foto de Google si está disponible
+            avatar: authUser.photoURL || '',
             role: 'student' as const,
             campus: '',
             intereses: [],
@@ -41,7 +40,6 @@ export const useUserProfile = () => {
             createdAt: serverTimestamp(),
           };
           
-          // Crear el documento del usuario con setDoc
           await setDoc(userRef, newUser);
           
           const userData: User = {
@@ -83,7 +81,6 @@ export const useUserProfile = () => {
         updatedAt: serverTimestamp(),
       });
 
-      // Actualizar estado local
       setUser(prev => prev ? { ...prev, ...updates } : null);
       setLoading(false);
       return { success: true };
@@ -115,7 +112,6 @@ export const useUserProfile = () => {
         updatedAt: serverTimestamp(),
       });
 
-      // Actualizar estado local
       setUser(prev => prev ? { ...prev, favoritos: newFavoritos } : null);
       return { success: true };
     } catch (err: any) {
@@ -137,7 +133,6 @@ export const useUserProfile = () => {
     try {
       setLoading(true);
       
-      // Actualizar el perfil con la nueva imagen
       const updateData: UserProfileUpdate = {
         avatar: imageUrl,
       };

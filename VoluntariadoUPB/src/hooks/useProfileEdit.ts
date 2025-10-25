@@ -22,7 +22,6 @@ export const useProfileEdit = () => {
     intereses: [],
   });
 
-  // Cargar datos del perfil al abrir el modal
   useEffect(() => {
     if (modalVisible && user) {
       setEditForm({
@@ -39,7 +38,6 @@ export const useProfileEdit = () => {
     }
   }, [modalVisible, user]);
 
-  // Validación del formulario
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     

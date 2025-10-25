@@ -10,7 +10,6 @@ export const useFavoriteOportunidades = () => {
   const [favoriteOportunidades, setFavoriteOportunidades] = useState<Oportunidad[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Escuchar cambios en el perfil del usuario en tiempo real
   useEffect(() => {
     if (!authUser?.uid) {
       setFavoriteIds([]);
@@ -35,7 +34,6 @@ export const useFavoriteOportunidades = () => {
     return () => unsubscribe();
   }, [authUser?.uid]);
 
-  // Obtener las oportunidades favoritas cuando cambien los IDs
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!favoriteIds || favoriteIds.length === 0) {
@@ -46,8 +44,7 @@ export const useFavoriteOportunidades = () => {
 
       try {
         setLoading(true);
-        
-        // Firestore 'in' queries tienen un límite de 10 items
+
         const chunks = [];
         for (let i = 0; i < favoriteIds.length; i += 10) {
           chunks.push(favoriteIds.slice(i, i + 10));
@@ -80,7 +77,7 @@ export const useFavoriteOportunidades = () => {
     };
 
     fetchFavorites();
-  }, [favoriteIds.length, favoriteIds.join(',')]); // Usar join para detectar cambios en el array
+  }, [favoriteIds.length, favoriteIds.join(',')]);
 
   return {
     favoriteOportunidades,
