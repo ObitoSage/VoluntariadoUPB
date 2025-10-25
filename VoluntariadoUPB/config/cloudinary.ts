@@ -7,6 +7,7 @@ export const cloudinaryConfig = {
 export const CLOUDINARY_FOLDERS = {
   AVATARS: 'voluntariado/avatars',
   COVERS: 'voluntariado/covers',
+  BACKGROUNDS: 'voluntariado/backgrounds',
   OPORTUNIDADES: 'voluntariado/oportunidades',
 } as const;
 
@@ -14,6 +15,7 @@ export const CLOUDINARY_TRANSFORMATIONS = {
   avatar: 'w_200,h_200,c_fill,g_face,q_auto,f_auto',
   avatarLarge: 'w_400,h_400,c_fill,g_face,q_auto,f_auto',
   cover: 'w_800,h_300,c_fill,q_auto,f_auto',
+  background: 'w_1200,h_400,c_fill,q_auto,f_auto',
   thumbnail: 'w_100,h_100,c_thumb,g_face,q_auto,f_auto',
   oportunidad: 'w_600,h_400,c_fill,q_auto,f_auto',
 } as const;

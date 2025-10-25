@@ -1,4 +1,5 @@
 export { ProfileHeader } from './ProfileHeader';
+export { ProfileHeaderWithBackground } from './ProfileHeaderWithBackground';
 export { ProfileStats } from './ProfileStats';
 export { AchievementsList } from './AchievementsList';
 export { AchievementModal } from './AchievementModal';

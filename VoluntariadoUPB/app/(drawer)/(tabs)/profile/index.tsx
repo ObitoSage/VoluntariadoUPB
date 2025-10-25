@@ -9,7 +9,7 @@ import { useFavoriteOportunidades } from '../../../../src/hooks/useFavoriteOport
 
 // Componentes modulares
 import { 
-  ProfileHeader, 
+  ProfileHeaderWithBackground,
   ProfileStats, 
   ActivitySection,
   FavoritesSection,
@@ -27,6 +27,9 @@ const createStyles = (colors: ThemeColors) =>
     scrollContent: {
       paddingBottom: 24,
     },
+    headerContainer: {
+      marginBottom: 24, // Espacio adicional después del header
+    },
   });
 
 const ProfileScreen = () => {
@@ -37,12 +40,12 @@ const ProfileScreen = () => {
   const { postulaciones, loading: postulacionesLoading } = usePostulaciones();
   const { favoriteOportunidades, loading: favoritesLoading, count: favoritesCount } = useFavoriteOportunidades();
 
-  // Modal state
+
   const [modalVisible, setModalVisible] = useState(false);
   const [achievementModalVisible, setAchievementModalVisible] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
 
-  // Calcular estadísticas
+ 
   const horasTotales = postulaciones.filter(p => p.status === 'accepted').length * 2;
   const eventosProximos = postulaciones.filter(p => p.status === 'pending').length;
 
@@ -70,7 +73,9 @@ const ProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileHeader user={profile} onEditPress={() => setModalVisible(true)} />
+        <View style={styles.headerContainer}>
+          <ProfileHeaderWithBackground user={profile} onEditPress={() => setModalVisible(true)} />
+        </View>
         
         <ProfileStats
           postulacionesCount={postulaciones.length}

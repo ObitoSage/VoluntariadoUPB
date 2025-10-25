@@ -58,7 +58,9 @@ export interface User {
   telefono?: string;
   intereses: string[];
   avatar?: string;
-  avatarPublicId?: string; 
+  avatarPublicId?: string;
+  backgroundImage?: string;
+  backgroundImagePublicId?: string;
   bio?: string;
   carrera?: string;
   semestre?: number;
@@ -75,7 +77,9 @@ export interface UserProfileUpdate {
   telefono?: string;
   intereses?: string[];
   avatar?: string;
-  avatarPublicId?: string; 
+  avatarPublicId?: string;
+  backgroundImage?: string;
+  backgroundImagePublicId?: string;
 }
 
 

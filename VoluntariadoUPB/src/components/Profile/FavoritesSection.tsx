@@ -52,10 +52,10 @@ export const FavoritesSection: React.FC<FavoritesSectionProps> = ({
         <View style={styles.empty}>
           <Ionicons name="heart-outline" size={48} color={colors.subtitle} />
           <Text style={[styles.emptyText, { color: colors.subtitle }]}>
-            No favorites yet
+            No hay favoritos aún
           </Text>
           <Text style={[styles.emptySubtext, { color: colors.muted }]}>
-            Mark opportunities with ❤️ to see them here
+            Marca las oportunidades que te interesen para verlas aquí.
           </Text>
         </View>
       ) : (

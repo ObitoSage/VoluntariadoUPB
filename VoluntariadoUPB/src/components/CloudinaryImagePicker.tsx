@@ -22,7 +22,7 @@ interface CloudinaryImagePickerProps {
   folder?: keyof typeof CLOUDINARY_FOLDERS;
   aspectRatio?: [number, number];
   quality?: number;
-  transformationType?: 'avatar' | 'avatarLarge' | 'cover' | 'thumbnail';
+  transformationType?: 'avatar' | 'avatarLarge' | 'cover' | 'background' | 'thumbnail';
   size?: number;
 }
 

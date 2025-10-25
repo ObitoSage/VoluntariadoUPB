@@ -41,6 +41,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     semestre: 0,
     telefono: '',
     avatar: '',
+    backgroundImage: '',
     intereses: [],
   });
   const [newInterest, setNewInterest] = useState('');
@@ -57,6 +58,8 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         telefono: profile.telefono || '',
         avatar: profile.avatar || '',
         avatarPublicId: profile.avatarPublicId || '',
+        backgroundImage: profile.backgroundImage || '',
+        backgroundImagePublicId: profile.backgroundImagePublicId || '',
         intereses: profile.intereses || [],
       });
     }
@@ -114,6 +117,10 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setEditForm({ ...editForm, avatar: url, avatarPublicId: publicId });
   };
 
+  const handleBackgroundImageSelected = (url: string, publicId: string) => {
+    setEditForm({ ...editForm, backgroundImage: url, backgroundImagePublicId: publicId });
+  };
+
   const handleAddInterest = () => {
     const trimmedInterest = newInterest.trim();
     if (trimmedInterest && !editForm.intereses?.includes(trimmedInterest)) {
@@ -162,8 +169,24 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Background Image */}
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Imagen de Fondo</Text>
+              <CloudinaryImagePicker
+                currentImageUri={editForm.backgroundImage}
+                currentPublicId={editForm.backgroundImagePublicId}
+                onImageSelected={handleBackgroundImageSelected}
+                folder="BACKGROUNDS"
+                transformationType="background"
+                size={120}
+                aspectRatio={[16, 9]}
+                quality={0.8}
+              />
+            </View>
+
             {/* Avatar */}
-            <View style={styles.avatarSection}>
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: colors.text }]}>Foto de Perfil</Text>
               <CloudinaryImagePicker
                 currentImageUri={editForm.avatar}
                 currentPublicId={editForm.avatarPublicId}
