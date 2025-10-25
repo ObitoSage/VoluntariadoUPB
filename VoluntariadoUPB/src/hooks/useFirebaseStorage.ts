@@ -15,36 +15,29 @@ export const useFirebaseStorage = () => {
       setUploading(true);
       setError(null);
 
-      // Convertir la URI a blob
       const response = await fetch(uri);
       const blob = await response.blob();
 
-      // Determinar el tipo MIME desde el blob o la URI
       let mimeType = blob.type;
       if (!mimeType || mimeType === 'application/octet-stream') {
-        // Intentar extraer de la extensión de la URI
         const extension = uri.split('.').pop()?.toLowerCase();
         mimeType = extension === 'jpg' || extension === 'jpeg' ? 'image/jpeg' :
-                   extension === 'png' ? 'image/png' :
-                   extension === 'gif' ? 'image/gif' :
-                   extension === 'webp' ? 'image/webp' :
-                   'image/jpeg'; // Por defecto
+                  extension === 'png' ? 'image/png' :
+                  extension === 'gif' ? 'image/gif' :
+                  extension === 'webp' ? 'image/webp' :
+                  'image/jpeg';
       }
 
-      // Generar nombre único si no se proporciona con extensión correcta
       const extension = mimeType.split('/')[1] || 'jpg';
       const name = filename || `${Date.now()}_${Math.random().toString(36).substring(7)}.${extension}`;
       const storageRef = ref(storage, `${folder}/${name}`);
 
-      // Metadata del archivo
       const metadata = {
         contentType: mimeType,
       };
 
-      // Subir el archivo con metadata
       await uploadBytes(storageRef, blob, metadata);
 
-      // Obtener la URL de descarga
       const downloadURL = await getDownloadURL(storageRef);
 
       setUploading(false);
