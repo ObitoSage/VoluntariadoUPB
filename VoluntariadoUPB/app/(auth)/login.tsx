@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,29 +17,48 @@ import { useAuthStore } from '../../src/store/useAuthStore';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 import { useGoogleSignIn } from '../../src/hooks/useGoogleSignIn';
 
+const MAX_EMAIL_LENGTH = 30;
+const MAX_PASSWORD_LENGTH = 30;
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   
-  const { signIn, isLoading, error, clearError } = useAuthStore();
+  const { signIn, setError, clearError } = useAuthStore();
   const { colors } = useThemeColors();
   const router = useRouter();
   
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      setError('Por favor completa todos los campos');
       return;
     }
 
+    setLocalLoading(true);
     try {
       await signIn(email, password);
-      // Redirigir a la app principal después del login exitoso
-      router.replace('/(drawer)/(tabs)');
-    } catch (error) {
-      // El error ya se maneja en el store
-      Alert.alert('Error', useAuthStore.getState().error || 'Error al iniciar sesión');
+      const currentError = useAuthStore.getState().error;
+      if (!currentError) {
+        router.replace('/(drawer)/(tabs)');
+      }
+    } catch (error: any) {
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    if (text.length <= MAX_EMAIL_LENGTH) {
+      setEmail(text);
+    }
+  };
+
+  const handlePasswordChange = (text: string) => {
+    if (text.length <= MAX_PASSWORD_LENGTH) {
+      setPassword(text);
     }
   };
 
@@ -50,26 +69,32 @@ export default function LoginScreen() {
 
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <View style={styles.content}>
-        {/* Logo/Título */}
-        <View style={styles.header}>
-          <Image 
-            source={require('../../assets/logoPlantini.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: colors.text }]}>
-            VoluntariadoUPB
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.subtitle }]}>
-            Inicia sesión para continuar
-          </Text>
-        </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Logo/Título */}
+      <View style={styles.header}>
+        <Image 
+          source={require('../../assets/logoPlantini.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={[styles.title, { color: colors.text }]}>
+          VoluntariadoUPB
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.subtitle }]}>
+          Inicia sesión para continuar
+        </Text>
+      </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Formulario */}
         <View style={styles.form}>
           {/* Email Input */}
@@ -80,10 +105,11 @@ export default function LoginScreen() {
               placeholder="Correo electrónico"
               placeholderTextColor={colors.muted}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              maxLength={MAX_EMAIL_LENGTH}
             />
           </View>
 
@@ -95,9 +121,10 @@ export default function LoginScreen() {
               placeholder="Contraseña"
               placeholderTextColor={colors.muted}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handlePasswordChange}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              maxLength={MAX_PASSWORD_LENGTH}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -115,9 +142,9 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: colors.primary }]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={localLoading}
           >
-            {isLoading ? (
+            {localLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
@@ -144,8 +171,9 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       </View>
-    </KeyboardAvoidingView>
   );
 }
 
@@ -154,13 +182,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
     padding: 24,
+    paddingTop: 16,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   logo: {
     width: 130,

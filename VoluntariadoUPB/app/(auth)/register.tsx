@@ -7,14 +7,17 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
+
+const MAX_EMAIL_LENGTH = 30;
+const MAX_PASSWORD_LENGTH = 30;
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -22,34 +25,40 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   
-  const { signUp, isLoading, error, clearError } = useAuthStore();
+  const { signUp, setError, clearError } = useAuthStore();
   const { colors } = useThemeColors();
   const router = useRouter();
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      setError('Por favor completa todos los campos');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      setError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
+    setLocalLoading(true);
     try {
       await signUp(email, password);
-      Alert.alert('Éxito', 'Cuenta creada exitosamente', [
-        { text: 'OK', onPress: () => router.replace('/(drawer)/(tabs)') }
-      ]);
+      // Si no hay error, redirigir
+      const currentError = useAuthStore.getState().error;
+      if (!currentError) {
+        router.replace('/(drawer)/(tabs)');
+      }
     } catch (error) {
-      Alert.alert('Error', useAuthStore.getState().error || 'Error al crear la cuenta');
+      // El error ya está en el store, el modal se mostrará automáticamente
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -58,29 +67,54 @@ export default function RegisterScreen() {
     router.back();
   };
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoToLogin} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Ionicons name="person-add-outline" size={80} color={colors.primary} />
-          <Text style={[styles.title, { color: colors.text }]}>
-            Crear Cuenta
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.subtitle }]}>
-            Únete a la comunidad de voluntarios
-          </Text>
-        </View>
+  const handleEmailChange = (text: string) => {
+    if (text.length <= MAX_EMAIL_LENGTH) {
+      setEmail(text);
+    }
+  };
 
+  const handlePasswordChange = (text: string) => {
+    if (text.length <= MAX_PASSWORD_LENGTH) {
+      setPassword(text);
+    }
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    if (text.length <= MAX_PASSWORD_LENGTH) {
+      setConfirmPassword(text);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header fijo */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleGoToLogin} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Image 
+          source={require('../../assets/plantiniRegistro.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={[styles.title, { color: colors.text }]}>
+          Crear Cuenta
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.subtitle }]}>
+          Únete a la comunidad de voluntarios
+        </Text>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Formulario */}
         <View style={styles.form}>
           {/* Email Input */}
@@ -91,35 +125,42 @@ export default function RegisterScreen() {
               placeholder="Correo electrónico"
               placeholderTextColor={colors.muted}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              maxLength={MAX_EMAIL_LENGTH}
             />
           </View>
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color={colors.muted} style={styles.inputIcon} />
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              placeholder="Contraseña (mínimo 6 caracteres)"
-              placeholderTextColor={colors.muted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                size={20}
-                color={colors.muted}
+            <Text style={[styles.inputLabel, { color: colors.subtitle }]}>
+              Contraseña (mínimo 6 caracteres)
+            </Text>
+            <View style={styles.inputWithIconContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color={colors.muted} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                placeholder="Contraseña"
+                placeholderTextColor={colors.muted}
+                value={password}
+                onChangeText={handlePasswordChange}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                maxLength={MAX_PASSWORD_LENGTH}
               />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={20}
+                  color={colors.muted}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Confirm Password Input */}
@@ -130,9 +171,10 @@ export default function RegisterScreen() {
               placeholder="Confirmar contraseña"
               placeholderTextColor={colors.muted}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={handleConfirmPasswordChange}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
+              maxLength={MAX_PASSWORD_LENGTH}
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -150,9 +192,9 @@ export default function RegisterScreen() {
           <TouchableOpacity
             style={[styles.registerButton, { backgroundColor: colors.primary }]}
             onPress={handleRegister}
-            disabled={isLoading}
+            disabled={localLoading}
           >
-            {isLoading ? (
+            {localLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.registerButtonText}>Crear Cuenta</Text>
@@ -172,7 +214,8 @@ export default function RegisterScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -182,19 +225,25 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     padding: 24,
+    paddingTop: 16,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    paddingTop: 60,
+    paddingBottom: 24,
     position: 'relative',
   },
   backButton: {
     position: 'absolute',
-    left: 0,
-    top: 0,
+    left: 24,
+    top: 60,
     padding: 8,
+    zIndex: 10,
+  },
+  logo: {
+    width: 130,
+    height: 130,
   },
   title: {
     fontSize: 28,
@@ -212,6 +261,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 16,
     position: 'relative',
+  },
+  inputWithIconContainer: {
+    position: 'relative',
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 6,
+    marginLeft: 4,
   },
   inputIcon: {
     position: 'absolute',

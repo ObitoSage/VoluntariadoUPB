@@ -31,9 +31,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signUp: async (email: string, password: string) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      set({ user: userCredential.user, isLoading: false });
+      set({ user: userCredential.user, error: null });
     } catch (error: any) {
       let errorMessage = 'Error al crear la cuenta';
       
@@ -49,22 +49,24 @@ export const useAuthStore = create<AuthState>((set) => ({
           break;
       }
       
-      set({ error: errorMessage, isLoading: false });
+      set({ error: errorMessage });
       throw error;
     }
   },
 
   signIn: async (email: string, password: string) => {
+    const previousUser = useAuthStore.getState().user;
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      set({ user: userCredential.user, isLoading: false });
+      set({ user: userCredential.user, error: null });
     } catch (error: any) {
       let errorMessage = 'Error al iniciar sesión';
       
       switch (error.code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
+        case 'auth/invalid-credential':
           errorMessage = 'Correo o contraseña incorrectos';
           break;
         case 'auth/invalid-email':
@@ -73,9 +75,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         case 'auth/user-disabled':
           errorMessage = 'Esta cuenta ha sido deshabilitada';
           break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Demasiados intentos fallidos. Intenta más tarde';
+          break;
       }
       
-      set({ error: errorMessage, isLoading: false });
+      set({ error: errorMessage, user: previousUser });
       throw error;
     }
   },
