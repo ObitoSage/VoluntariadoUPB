@@ -50,13 +50,11 @@ export default function RegisterScreen() {
     setLocalLoading(true);
     try {
       await signUp(email, password);
-      // Si no hay error, redirigir
       const currentError = useAuthStore.getState().error;
       if (!currentError) {
         router.replace('/(drawer)/(tabs)');
       }
     } catch (error) {
-      // El error ya está en el store, el modal se mostrará automáticamente
     } finally {
       setLocalLoading(false);
     }
@@ -87,13 +85,12 @@ export default function RegisterScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header fijo */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoToLogin} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Image 
-          source={require('../../assets/plantiniRegistro.png')} 
+          source={require('../../assets/Plantini/plantiniRegistro.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
@@ -115,9 +112,7 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-        {/* Formulario */}
         <View style={styles.form}>
-          {/* Email Input */}
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color={colors.muted} style={styles.inputIcon} />
             <TextInput
@@ -133,7 +128,6 @@ export default function RegisterScreen() {
             />
           </View>
 
-          {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.inputLabel, { color: colors.subtitle }]}>
               Contraseña (mínimo 6 caracteres)
@@ -163,7 +157,6 @@ export default function RegisterScreen() {
             </View>
           </View>
 
-          {/* Confirm Password Input */}
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color={colors.muted} style={styles.inputIcon} />
             <TextInput
@@ -188,7 +181,6 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Register Button */}
           <TouchableOpacity
             style={[styles.registerButton, { backgroundColor: colors.primary }]}
             onPress={handleRegister}
@@ -201,7 +193,6 @@ export default function RegisterScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Login Link */}
           <View style={styles.loginContainer}>
             <Text style={[styles.loginText, { color: colors.subtitle }]}>
               ¿Ya tienes una cuenta?{' '}

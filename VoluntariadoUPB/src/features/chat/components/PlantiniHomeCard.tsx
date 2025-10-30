@@ -10,7 +10,7 @@ export const PlantiniHomeCard: React.FC = () => {
 
   return (
     <View style={styles.card} accessible accessibilityLabel="Plantini card">
-      <Image source={require('../../../../assets/logoPlantini.png')} style={styles.avatar} />
+      <Image source={require('../../../../assets/Plantini/plantini.png')} style={styles.avatar} />
       <View style={styles.body}>
   <Text style={styles.title}>Hola, soy Plantini</Text>
   <Text style={styles.subtitle}>Soy el asistente de VoluntariadoUPB. Solo respondo consultas relacionadas con oportunidades, postulaciones, perfiles y permisos dentro de la app.</Text>

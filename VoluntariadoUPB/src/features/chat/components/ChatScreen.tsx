@@ -16,7 +16,7 @@ const ChatScreen: React.FC<{ initialChatId?: string }> = ({ initialChatId }) => 
   return (
   <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom }] }>
       <View style={styles.header}>
-        <Image source={require('../../../../assets/logoPlantini.png')} style={styles.headerAvatar} />
+        <Image source={require('../../../../assets/Plantini/plantini.png')} style={styles.headerAvatar} />
         <View >
           <Text style={styles.headerTitle}>Plantini · Asistente de VoluntariadoUPB</Text>
           <Text style={styles.headerSubtitle}>Solo responde preguntas relacionadas con la app</Text>

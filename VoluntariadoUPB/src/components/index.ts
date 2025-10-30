@@ -10,3 +10,4 @@ export { GoalModal } from './GoalModal';
 export { CreateOportunidadModal } from './CreateOportunidadModal';
 export { SplashScreen } from './SplashScreen';
 export { ErrorModal } from './ErrorModal';
+export { LogoutModal } from './LogoutModal';

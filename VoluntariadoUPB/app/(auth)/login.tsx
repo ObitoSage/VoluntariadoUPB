@@ -70,10 +70,9 @@ export default function LoginScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Logo/Título */}
       <View style={styles.header}>
         <Image 
-          source={require('../../assets/logoPlantini.png')} 
+          source={require('../../assets/Plantini/plantini.png')} 
           style={styles.logo}
           resizeMode="contain"
         />
@@ -95,9 +94,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-        {/* Formulario */}
         <View style={styles.form}>
-          {/* Email Input */}
           <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color={colors.muted} style={styles.inputIcon} />
             <TextInput
@@ -113,7 +110,6 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Password Input */}
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color={colors.muted} style={styles.inputIcon} />
             <TextInput
@@ -138,7 +134,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Login Button */}
           <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: colors.primary }]}
             onPress={handleLogin}
@@ -151,15 +146,12 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Divider */}
           <View style={styles.dividerContainer}>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <Text style={[styles.dividerText, { color: colors.subtitle }]}>o</Text>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
           </View>
 
-          {/* Google Sign-In Button */}
-          {/* Register Link */}
           <View style={styles.registerContainer}>
             <Text style={[styles.registerText, { color: colors.subtitle }]}>
               ¿No tienes una cuenta?{' '}

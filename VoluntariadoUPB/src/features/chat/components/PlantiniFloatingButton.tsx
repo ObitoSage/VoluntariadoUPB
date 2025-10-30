@@ -9,7 +9,7 @@ export const PlantiniFloatingButton: React.FC = () => {
   const { colors } = useThemeColors();
   const onChat = segments.includes('chat');
 
-  if (onChat) return null; // hide when chat is open
+  if (onChat) return null;
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -18,7 +18,7 @@ export const PlantiniFloatingButton: React.FC = () => {
         style={[styles.button, { backgroundColor: colors.primary }]}
         accessibilityLabel="Abrir Plantini"
       >
-        <Image source={require('../../../../assets/logoPlantini.png')} style={styles.icon} />
+        <Image source={require('../../../../assets/Plantini/plantini.png')} style={styles.icon} />
       </TouchableOpacity>
     </View>
   );
