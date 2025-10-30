@@ -38,7 +38,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         ]}
       >
         <Image
-          source={require('../../assets/Plantini/plantini.png')}
+          source={require('../../assets/LogoUPB.png')}
           style={styles.logo}
           resizeMode="contain"
         />
