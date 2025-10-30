@@ -35,6 +35,9 @@ export default function HomeRedirect() {
       </View>
     );
   }
+  if (!user) {
+    return <Redirect href="/onboarding" />;
+  }
 
   if (user) {
     return <Redirect href="/(drawer)/(tabs)" />;
