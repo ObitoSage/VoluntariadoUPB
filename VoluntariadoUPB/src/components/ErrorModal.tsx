@@ -31,16 +31,14 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({ visible, message, onClos
     >
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
-          {/* Contenido */}
+
           <View style={styles.content}>
-            {/* Imagen de Plantini Preocupado */}
             <Image
-              source={require('../../assets/plantiniPreocupado.png')}
+              source={require('../../assets/Plantini/plantiniPreocupado.png')}
               style={styles.plantiniImage}
               resizeMode="contain"
             />
 
-            {/* Mensaje de error */}
             <View style={styles.messageContainer}>
               <Text style={[styles.title, { color: colors.text }]}>
                 ¡Oh, oh!
@@ -50,7 +48,6 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({ visible, message, onClos
               </Text>
             </View>
 
-            {/* Botón de intentar de nuevo */}
             <TouchableOpacity
               style={[styles.retryButton, { backgroundColor: colors.primary }]}
               onPress={onClose}

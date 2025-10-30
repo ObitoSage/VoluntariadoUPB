@@ -15,7 +15,7 @@ export default function AboutScreen() {
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         <View style={styles.iconContainer}>
           <Image 
-            source={require('../../assets/plantiniNerd.png')} 
+            source={require('../../assets/Plantini/plantiniNerd.png')} 
             style={styles.mascotImage}
             resizeMode="contain"
           />

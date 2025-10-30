@@ -9,7 +9,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animación de agrandamiento
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 1,
@@ -17,14 +16,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         tension: 40,
         useNativeDriver: true,
       }),
-      Animated.delay(800), // Pausa para apreciar el logo
+      Animated.delay(800),
       Animated.timing(scaleAnim, {
         toValue: 1.1,
         duration: 300,
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // Cuando termina la animación, llamamos a onFinish
       setTimeout(onFinish, 100);
     });
   }, []);
@@ -40,7 +38,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         ]}
       >
         <Image
-          source={require('../../assets/logoPlantini.png')}
+          source={require('../../assets/Plantini/plantini.png')}
           style={styles.logo}
           resizeMode="contain"
         />
