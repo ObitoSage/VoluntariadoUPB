@@ -12,8 +12,6 @@ const router = useRouter();
 const { colors } = useThemeColors();
 
 const finish = useCallback(async () => {
-    
-    console.log('[Onboarding] Tutorial completado, navegando a login...');
     router.replace('/(auth)/login');
 }, [router]);
 
@@ -22,7 +20,7 @@ return (
     <Onboarding
     pages={ONBOARDING_STEPS.map(step => ({
         backgroundColor: step.backgroundColor,
-        image: <View style={{ marginVertical: 40 }}>{step.image}</View>,
+        image: <View style={{ marginVertical: 10 }}>{step.image}</View>,
         title: step.title,
         subtitle: step.subtitle,
         titleStyles: {
@@ -53,6 +51,7 @@ return (
         paddingBottom: 20,
     }}
     controlStatusBar={false}
+    transitionAnimationDuration={0}
 
     DotComponent={({ selected }: { selected: boolean }) => (
         <View
