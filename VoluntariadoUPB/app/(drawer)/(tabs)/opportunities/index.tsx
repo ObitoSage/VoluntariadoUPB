@@ -18,6 +18,7 @@ import { useOportunidades } from '../../../../src/hooks/useOportunidades';
 import { useOportunidadesStore } from '../../../../src/store/oportunidadesStore';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
+import { useAnimatedRefresh } from '../../../../src/hooks/usePullToRefresh';
 import { OportunidadCard, FilterChip, EmptyState, LoadingSkeleton, CreateOportunidadModal } from '../../../../src/components';
 import {
   CATEGORIAS,
@@ -39,6 +40,9 @@ export default function OportunidadesListScreen() {
   const { filtros, setFiltros, clearFiltros } = useOportunidadesStore();
   const { user, toggleFavorito } = useUserProfile();
   const { canCreateOpportunity } = useRolePermissions();
+  
+  // Hook de pull-to-refresh animado
+  const { refreshControl } = useAnimatedRefresh(refresh, refreshing, colors.primary);
 
   const [searchInput, setSearchInput] = useState(filtros.busqueda);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -272,23 +276,17 @@ export default function OportunidadesListScreen() {
         <FlatList
           data={oportunidades}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <OportunidadCard
               oportunidad={item}
               onPress={() => router.push(`/opportunities/${item.id}`)}
               onFavorite={() => handleFavorite(item.id)}
               isFavorite={isFavorite(item.id)}
+              index={index}
             />
           )}
           contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={refresh}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
-            />
-          }
+          refreshControl={refreshControl}
           ListEmptyComponent={
             <EmptyState
               icon="search"

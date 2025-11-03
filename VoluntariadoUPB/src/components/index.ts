@@ -1,4 +1,5 @@
 export { OportunidadCard } from './OportunidadCard';
+export { PostulacionCard } from './PostulacionCard';
 export { FilterChip } from './FilterChip';
 export { StatusBadge } from './StatusBadge';
 export { CategoriaBadge } from './CategoriaBadge';
