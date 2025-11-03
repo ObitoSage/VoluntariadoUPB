@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Share,
   Linking,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +25,8 @@ import { useAuthStore } from '../../../../src/store/useAuthStore';
 import { useThemeColors } from '../../../../src/hooks/useThemeColors';
 import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
+import { useSubmitFeedbackAnimation } from '../../../../src/hooks/useCardAnimation';
+import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks/useSharedTransition';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
@@ -41,6 +44,11 @@ export default function OportunidadDetailScreen() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [showApplications, setShowApplications] = useState(false);
+  
+  // Animaciones
+  const { animateSubmit, resetAnimation, style: submitButtonStyle } = useSubmitFeedbackAnimation();
+  const { animateIn, sharedStyle } = useSharedElementTransition();
+  const { fadeIn: fadeInModal, fadeOut: fadeOutModal, style: modalFadeStyle } = useFadeScaleTransition();
 
   const canApply = isStudent() && voluntariado?.status === 'open';
   
@@ -80,6 +88,13 @@ export default function OportunidadDetailScreen() {
 
     fetchOportunidad();
   }, [id]);
+
+  // Animar entrada de la pantalla
+  useEffect(() => {
+    if (!loading && voluntariado) {
+      animateIn();
+    }
+  }, [loading, voluntariado]);
 
   // Verificar si es favorito
   useEffect(() => {
@@ -247,6 +262,11 @@ export default function OportunidadDetailScreen() {
 
     setIsSubmitting(true);
     
+    // Animar el botón
+    animateSubmit(() => {
+      // Callback después de la animación
+    });
+    
     try {
       // Crear postulación en Firebase
       const postulacionData = {
@@ -279,6 +299,7 @@ export default function OportunidadDetailScreen() {
       
       setIsSubmitting(false);
       setModalVisible(false);
+      resetAnimation();
       
       // Limpiar formulario
       setMotivacion('');
@@ -297,6 +318,7 @@ export default function OportunidadDetailScreen() {
     } catch (error) {
       console.error('Error al crear postulación:', error);
       setIsSubmitting(false);
+      resetAnimation();
       Alert.alert(
         'Error',
         'No se pudo registrar tu postulación. Por favor intenta de nuevo.',
@@ -731,19 +753,26 @@ export default function OportunidadDetailScreen() {
                 </Text>
               </TouchableOpacity>
               
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  { backgroundColor: colors.primary },
-                  isSubmitting && { opacity: 0.6 }
-                ]}
-                onPress={handleSubmitPostulacion}
-                disabled={isSubmitting}
-              >
-                <Text style={styles.submitButtonText}>
-                  {isSubmitting ? 'Enviando...' : 'Enviar Postulación'}
-                </Text>
-              </TouchableOpacity>
+              <Animated.View style={[{ flex: 1 }, submitButtonStyle]}>
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    { backgroundColor: colors.primary },
+                    isSubmitting && { opacity: 0.6 }
+                  ]}
+                  onPress={handleSubmitPostulacion}
+                  disabled={isSubmitting}
+                  activeOpacity={0.8}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>
+                      Enviar Postulación
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
             </View>
           </KeyboardAvoidingView>
         </SafeAreaView>

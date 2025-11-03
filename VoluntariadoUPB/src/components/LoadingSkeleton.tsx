@@ -10,8 +10,10 @@ interface LoadingSkeletonProps {
 export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type, count = 3 }) => {
   const { colors, theme } = useThemeColors();
   const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const shimmerTranslate = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
+    // Animación de pulso de opacidad
     Animated.loop(
       Animated.sequence([
         Animated.timing(shimmerAnim, {
@@ -26,6 +28,15 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type, count = 
         }),
       ])
     ).start();
+
+    // Animación de shimmer deslizante (efecto wave)
+    Animated.loop(
+      Animated.timing(shimmerTranslate, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      })
+    ).start();
   }, []);
 
   const shimmerOpacity = shimmerAnim.interpolate({
@@ -33,15 +44,47 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type, count = 
     outputRange: [0.3, 0.7],
   });
 
+  const translateX = shimmerTranslate.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-350, 350],
+  });
+
   const skeletonColor = theme === 'dark' ? '#2d3748' : '#e2e8f0';
+  const shimmerColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)';
 
   const SkeletonBox = ({ width, height, style }: any) => (
-    <Animated.View
-      style={[
-        { width, height, backgroundColor: skeletonColor, borderRadius: 8, opacity: shimmerOpacity },
-        style,
-      ]}
-    />
+    <View style={[{ width, height, borderRadius: 8, overflow: 'hidden' }, style]}>
+      <Animated.View
+        style={[
+          {
+            width: '100%',
+            height: '100%',
+            backgroundColor: skeletonColor,
+            opacity: shimmerOpacity,
+          },
+        ]}
+      />
+      {/* Shimmer effect overlay */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          transform: [{ translateX }],
+        }}
+      >
+        <View
+          style={{
+            width: 100,
+            height: '100%',
+            backgroundColor: shimmerColor,
+            transform: [{ skewX: '-20deg' }],
+          }}
+        />
+      </Animated.View>
+    </View>
   );
 
   if (type === 'card') {

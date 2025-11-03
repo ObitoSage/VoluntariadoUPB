@@ -1,8 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Oportunidad, CATEGORIAS } from '../types';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { 
+  useCardAnimation, 
+  useFavoriteAnimation, 
+  useCardPressAnimation 
+} from '../hooks/useCardAnimation';
+import { useSwipeActions } from '../hooks/useSwipeGestures';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -11,6 +17,9 @@ interface OportunidadCardProps {
   onPress: () => void;
   onFavorite: () => void;
   isFavorite: boolean;
+  index?: number; // Para animación escalonada
+  onArchive?: () => void; // Opcional: archivar con swipe
+  enableSwipe?: boolean; // Habilitar swipe gestures
 }
 
 export const OportunidadCard: React.FC<OportunidadCardProps> = ({
@@ -18,9 +27,22 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   onPress,
   onFavorite,
   isFavorite,
+  index = 0,
+  onArchive,
+  enableSwipe = false,
 }) => {
   const { colors } = useThemeColors();
   const [isFavoritePressed, setIsFavoritePressed] = React.useState(false);
+
+  const cardAnimation = useCardAnimation(index);
+  const { animateFavorite, style: favoriteStyle } = useFavoriteAnimation();
+  const { scale, onPressIn, onPressOut } = useCardPressAnimation();
+  
+  const swipeGesture = useSwipeActions(
+    onArchive, // left action (archivar)
+    undefined, // right action (no usado)
+    enableSwipe && !!onArchive
+  );
 
   const handleCardPress = () => {
     if (!isFavoritePressed) {
@@ -34,6 +56,7 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
     if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }
+    animateFavorite(!isFavorite);
     onFavorite();
   };
 
@@ -85,11 +108,43 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
   const categoriaInfo = getCategoriaInfo();
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      onPress={handleCardPress}
-      activeOpacity={0.7}
-    >
+    <View style={{ position: 'relative' }}>
+      {/* Fondo de acción de swipe (si está habilitado) */}
+      {enableSwipe && onArchive && (
+        <Animated.View
+          style={[
+            styles.swipeBackground,
+            {
+              backgroundColor: '#EF4444',
+              opacity: swipeGesture.leftActionOpacity,
+            },
+          ]}
+        >
+          <Animated.View
+            style={{
+              transform: [{ scale: swipeGesture.leftActionScale }],
+            }}
+          >
+            <Ionicons name="archive" size={32} color="#fff" />
+          </Animated.View>
+          <Text style={styles.swipeText}>Archivar</Text>
+        </Animated.View>
+      )}
+
+      <Animated.View
+        style={[
+          cardAnimation,
+          enableSwipe && onArchive ? { transform: [{ translateX: swipeGesture.translateX }] } : {},
+        ]}
+        {...(enableSwipe && onArchive ? swipeGesture.panResponder : {})}
+      >
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ scale }] }]}
+          onPress={handleCardPress}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          activeOpacity={1}
+        >
       {/* Cover Image */}
       <View style={styles.coverContainer}>
         {oportunidad.cover ? (
@@ -106,17 +161,19 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
         </View>
 
         {/* Favorite Button */}
-        <TouchableOpacity
-          style={[styles.favoriteButton, { backgroundColor: colors.surface }]}
-          onPress={handleFavoritePress}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons
-            name={isFavorite ? 'heart' : 'heart-outline'}
-            size={22}
-            color={isFavorite ? '#FF6B6B' : colors.subtitle}
-          />
-        </TouchableOpacity>
+        <Animated.View style={favoriteStyle}>
+          <TouchableOpacity
+            style={[styles.favoriteButton, { backgroundColor: colors.surface }]}
+            onPress={handleFavoritePress}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isFavorite ? '#FF6B6B' : colors.subtitle}
+            />
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
       {/* Content */}
@@ -184,7 +241,9 @@ export const OportunidadCard: React.FC<OportunidadCardProps> = ({
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 };
 
@@ -299,5 +358,22 @@ const styles = StyleSheet.create({
   modalidadText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  swipeBackground: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 16,
+    width: 120,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
   },
 });

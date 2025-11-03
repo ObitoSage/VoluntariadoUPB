@@ -9,6 +9,7 @@ ScrollView,
 FlatList,
 RefreshControl,
 ActivityIndicator,
+Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,6 +18,7 @@ import { usePostulaciones, Postulacion } from '../../../../src/hooks/usePostulac
 import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
 import { PostulacionDetailModal } from '../../../../src/components/PostulacionDetailModal';
 import { AdminPostulacionModal } from '../../../../src/components/AdminPostulacionModal';
+import { PostulacionCard } from '../../../../src/components/PostulacionCard';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -361,65 +363,37 @@ const getStatusLabel = (status: string) => {
     }
 };
 
-const renderApplicationCard = ({ item }: { item: any }) => {
-    const formattedDate = item.applicationDate 
-        ? new Date(item.applicationDate).toLocaleDateString('es-ES', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-        })
-        : 'Fecha no disponible';
-    
+const renderApplicationCard = ({ item, index }: { item: any; index: number }) => {
     const isAdminView = canViewAllApplications();
 
+    const handleApprove = async () => {
+      if (!item.id) return;
+      const success = await updatePostulacionStatus(item.id, 'accepted');
+      if (success) {
+        Alert.alert('✅ Aprobado', 'La postulación ha sido aprobada exitosamente');
+      }
+    };
+
+    const handleReject = async () => {
+      if (!item.id) return;
+      const success = await updatePostulacionStatus(item.id, 'rejected');
+      if (success) {
+        Alert.alert('❌ Rechazado', 'La postulación ha sido rechazada');
+      }
+    };
+
     return (
-    <View style={styles.applicationCard}>
-    <View style={styles.applicationHeader}>
-        <Text style={styles.applicationTitle}>{item.titulo}</Text>
-        <View style={[styles.statusBadge, getStatusBadgeStyle(item.status)]}>
-        <Text style={[styles.statusText, getStatusTextStyle(item.status)]}>
-            {getStatusLabel(item.status)}
-        </Text>
-        </View>
-    </View>
-
-    <View style={styles.applicationDetails}>
-        <View style={styles.detailRow}>
-        <Ionicons name="business-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.organizacion}</Text>
-        </View>
-        <View style={styles.detailRow}>
-        <Ionicons name="location-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>{item.location}</Text>
-        </View>
-        <View style={styles.detailRow}>
-        <Ionicons name="calendar-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>Postulado: {formattedDate}</Text>
-        </View>
-        <View style={styles.detailRow}>
-        <Ionicons name="document-text-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText} numberOfLines={2}>{item.descripcion}</Text>
-        </View>
-        {item.disponibilidad && (
-        <View style={styles.detailRow}>
-        <Ionicons name="time-outline" size={16} color={colors.subtitle} style={styles.detailIcon} />
-        <Text style={styles.detailText}>Disponibilidad: {item.disponibilidad}</Text>
-        </View>
-        )}
-    </View>
-
-    <View style={styles.applicationActions}>
-    <TouchableOpacity 
-    style={[styles.actionButton, styles.secondaryButton]}
-    onPress={() => isAdminView ? handleAdministrar(item) : handleVerDetalles(item.oportunidadId)}
-    >
-    <Ionicons name="eye-outline" size={16} color={colors.text} />
-    <Text style={[styles.buttonText, styles.secondaryButtonText]}>{isAdminView ? 'Administrar' : 'Ver Detalles'}</Text>
-    </TouchableOpacity>
-    </View>
-    </View>
+      <PostulacionCard
+        item={item}
+        index={index}
+        onPress={() => isAdminView ? handleAdministrar(item) : handleVerDetalles(item.oportunidadId)}
+        isAdminView={isAdminView}
+        enableSwipe={isAdminView}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     );
-};
+  };
 
 const renderEmptyState = () => (
     <View style={styles.emptyState}>
