@@ -116,6 +116,7 @@ export interface OportunidadesFiltros {
   habilidades: string[];
   busqueda: string;
   status: OportunidadStatusType[];
+  distancia?: string;
 }
 
 
