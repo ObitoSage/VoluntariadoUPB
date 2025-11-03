@@ -44,6 +44,15 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Mapa',
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="applications"
         options={{
           title: 'Postulaciones',

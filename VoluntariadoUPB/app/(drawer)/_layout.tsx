@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeColors, useUserProfile } from '../../src/hooks';
 import { LogoutModal } from '../../src/components';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -10,6 +10,7 @@ export default function DrawerLayout() {
   const { colors } = useThemeColors();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { logout } = useAuthStore();
+  const { user: userProfile } = useUserProfile();
   const router = useRouter();
 
   const handleLogoutPress = () => {
@@ -88,6 +89,23 @@ export default function DrawerLayout() {
           }}
         />
         
+        {/* Sección Administración */}
+        {userProfile?.role === 'admin' && (
+          <Drawer.Screen
+            name="(admin)/gestion-ubicaciones"
+            options={{
+              drawerLabel: 'Gestión de Ubicaciones',
+              title: 'Gestión de Ubicaciones',
+              drawerIcon: ({ color, size }) => (
+                <Ionicons name="map" size={size} color={color} />
+              ),
+              drawerItemStyle: {
+                marginTop: 20,
+              },
+            }}
+          />
+        )}
+        
         {/* Sección Configuración */}
         <Drawer.Screen
           name="settings"
@@ -98,7 +116,7 @@ export default function DrawerLayout() {
               <Ionicons name="settings" size={size} color={color} />
             ),
             drawerItemStyle: {
-              marginTop: 30,
+              marginTop: 20,
             },
           }}
         />

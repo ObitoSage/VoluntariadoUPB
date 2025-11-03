@@ -10,3 +10,7 @@ export { useThemeColors } from './useThemeColors';
 export { useUserStats } from './useUserStats';
 export { useUserGoal } from './useUserGoal';
 export { useProfileEdit } from './useProfileEdit';
+export { useUserLocation } from './useUserLocation';
+export { useOportunidadesConDistancia } from './useOportunidadesConDistancia';
+export { useRouteCalculation } from './useRouteCalculation';
+export { useLocationManager } from './useLocationManager';
