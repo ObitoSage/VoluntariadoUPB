@@ -13,6 +13,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '../../config/firebase';
 import { useAuthStore } from '../store/useAuthStore';
@@ -108,7 +109,43 @@ export const CreateOportunidadModal: React.FC<OportunidadModalProps> = ({
         createdBy: user.uid,
       };
 
-      await addDoc(collection(db, COLLECTIONS.OPORTUNIDADES), newOportunidad);
+      const docRef = await addDoc(collection(db, COLLECTIONS.OPORTUNIDADES), newOportunidad);
+
+      // 🎉 NOTIFICACIÓN: Nueva oportunidad creada (solo para ti como admin)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '✅ Oportunidad Creada',
+          body: `"${formData.titulo}" se publicó exitosamente. Los usuarios ya pueden verla.`,
+          data: {
+            type: 'oportunidad_creada',
+            oportunidadId: docRef.id,
+          },
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.DEFAULT,
+        },
+        trigger: null,
+      });
+
+      // 🎯 MODO DEMO: Simular que un usuario te notifica (después de 5 segundos)
+      if (__DEV__) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🆕 Nueva Oportunidad Disponible',
+            body: `${formData.titulo} - ${CATEGORIAS.find(c => c.key === formData.categoria)?.label}`,
+            data: {
+              type: 'nueva_oportunidad',
+              oportunidadId: docRef.id,
+              isDemo: true,
+            },
+            sound: true,
+            priority: Notifications.AndroidNotificationPriority.DEFAULT,
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: new Date(Date.now() + 5000), // 5 segundos después
+          },
+        });
+      }
 
       Alert.alert('Éxito', 'Oportunidad creada correctamente');
       onSuccess?.();

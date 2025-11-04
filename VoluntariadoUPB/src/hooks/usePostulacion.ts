@@ -7,6 +7,7 @@ import {
   increment,
   serverTimestamp 
 } from 'firebase/firestore';
+import * as Notifications from 'expo-notifications';
 import { db } from '../../config/firebase';
 import { useAuthStore } from '../store/useAuthStore';
 import { PostulacionFormData, COLLECTIONS, Oportunidad } from '../types';
@@ -35,6 +36,10 @@ export const usePostulacion = () => {
         estudianteEmail: user.email,
         oportunidadId: oportunidad.id,
         oportunidadTitulo: oportunidad.titulo,
+        titulo: oportunidad.titulo,
+        organizacion: oportunidad.organizacion,
+        location: `${oportunidad.campus}, ${oportunidad.ciudad}`,
+        descripcion: oportunidad.descripcion,
         motivacion: formData.motivacion,
         disponibilidad: formData.disponibilidad,
         telefono: formData.telefono || '',
@@ -44,7 +49,7 @@ export const usePostulacion = () => {
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, COLLECTIONS.POSTULACIONES), postulacionData);
+      const docRef = await addDoc(collection(db, COLLECTIONS.POSTULACIONES), postulacionData);
 
       const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, oportunidad.id);
       const newCuposDisponibles = oportunidad.cuposDisponibles - 1;
@@ -59,6 +64,59 @@ export const usePostulacion = () => {
       }
 
       await updateDoc(oportunidadRef, updateData);
+
+      // 🎉 NOTIFICACIÓN: Postulación enviada exitosamente
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '✅ Postulación Enviada',
+          body: `Tu postulación a "${oportunidad.titulo}" fue enviada exitosamente. Te notificaremos cuando sea revisada.`,
+          data: {
+            type: 'postulacion_enviada',
+            postulacionId: docRef.id,
+            oportunidadId: oportunidad.id,
+          },
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger: null, // Inmediata
+      });
+
+      // 🎯 MODO DEMO: Simular aceptación automática después de 8 segundos
+      if (__DEV__) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '🎉 Postulación Aceptada',
+            body: `¡Felicitaciones! Tu postulación a "${oportunidad.titulo}" ha sido aceptada.`,
+            data: {
+              type: 'postulacion_status',
+              postulacionId: docRef.id,
+              oportunidadId: oportunidad.id,
+              status: 'aceptada',
+              isDemo: true,
+            },
+            sound: true,
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: new Date(Date.now() + 8000),
+          },
+        });
+
+        // Actualizar estado en Firestore después de 8 segundos
+        setTimeout(async () => {
+          try {
+            const postulacionRef = doc(db, COLLECTIONS.POSTULACIONES, docRef.id);
+            await updateDoc(postulacionRef, {
+              estado: 'aceptada',
+              confirmado: true,
+              updatedAt: serverTimestamp(),
+            });
+          } catch (error) {
+            // Error silencioso en modo demo
+          }
+        }, 8000);
+      }
 
       setLoading(false);
       return { success: true };

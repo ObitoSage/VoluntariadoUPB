@@ -15,3 +15,4 @@ export { useOportunidadesConDistancia } from './useOportunidadesConDistancia';
 export { useRouteCalculation } from './useRouteCalculation';
 export { useLocationManager } from './useLocationManager';
 export { useRolePermissions } from './useRolePermissions';
+export { useNotifications } from './useNotifications';
