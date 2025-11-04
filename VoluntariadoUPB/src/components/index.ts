@@ -18,3 +18,6 @@ export { CustomMarker } from './CustomMarker';
 export { MarkerCallout } from './MarkerCallout';
 export { MapFilters } from './MapFilters';
 export { LocationPermissionModal } from './LocationPermissionModal';
+export { default as ForgotPasswordModal } from './ForgotPasswordModal';
+export { default as SuccessNotification } from './SuccessNotification';
+
