@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 import { useGoogleSignIn } from '../../src/hooks/useGoogleSignIn';
+import { ForgotPasswordModal, SuccessNotification } from '../../src/components';
 
 const MAX_EMAIL_LENGTH = 30;
 const MAX_PASSWORD_LENGTH = 30;
@@ -25,6 +26,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   
   const { signIn, setError, clearError } = useAuthStore();
   const { colors } = useThemeColors();
@@ -67,6 +70,9 @@ export default function LoginScreen() {
     router.push('/(auth)/register');
   };
 
+  const handleForgotPasswordSuccess = () => {
+    setShowSuccessNotification(true);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -135,6 +141,15 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
+            style={styles.forgotPasswordContainer}
+            onPress={() => setShowForgotPasswordModal(true)}
+          >
+            <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
+              ¿Olvidaste tu contraseña?
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.loginButton, { backgroundColor: colors.primary }]}
             onPress={handleLogin}
             disabled={localLoading}
@@ -165,6 +180,18 @@ export default function LoginScreen() {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ForgotPasswordModal
+        visible={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onSuccess={handleForgotPasswordSuccess}
+      />
+
+      <SuccessNotification
+        visible={showSuccessNotification}
+        message="¡Correo enviado! Revisa tu bandeja de entrada para restablecer tu contraseña."
+        onHide={() => setShowSuccessNotification(false)}
+      />
       </View>
   );
 }
@@ -222,12 +249,21 @@ const styles = StyleSheet.create({
     right: 16,
     top: 18,
   },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   loginButton: {
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
   loginButtonText: {
     color: '#fff',
