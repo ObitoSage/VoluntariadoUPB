@@ -3,6 +3,7 @@ import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useThemeColors, useUserProfile } from '../../src/hooks';
+import { useRolePermissions } from '../../src/hooks/useRolePermissions';
 import { LogoutModal } from '../../src/components';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
@@ -11,6 +12,7 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { logout } = useAuthStore();
   const { user: userProfile } = useUserProfile();
+  const { canManageOpportunities } = useRolePermissions();
   const router = useRouter();
 
   const handleLogoutPress = () => {
@@ -89,22 +91,20 @@ export default function DrawerLayout() {
           }}
         />
         
-        {/* Sección Administración */}
-        {userProfile?.role === 'admin' && (
-          <Drawer.Screen
-            name="(admin)/gestion-ubicaciones"
-            options={{
-              drawerLabel: 'Gestión de Ubicaciones',
-              title: 'Gestión de Ubicaciones',
-              drawerIcon: ({ color, size }) => (
-                <Ionicons name="map" size={size} color={color} />
-              ),
-              drawerItemStyle: {
-                marginTop: 20,
-              },
-            }}
-          />
-        )}
+        {/* Sección Administración - Solo visible para Admins */}
+        <Drawer.Screen
+          name="(admin)/gestion-ubicaciones"
+          options={{
+            drawerLabel: 'Gestión de Ubicaciones',
+            title: 'Gestión de Ubicaciones',
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="map" size={size} color={color} />
+            ),
+            drawerItemStyle: (canManageOpportunities() || userProfile?.role === 'admin') 
+              ? { marginTop: 20 }
+              : { display: 'none', height: 0 },
+          }}
+        />
         
         {/* Sección Configuración */}
         <Drawer.Screen

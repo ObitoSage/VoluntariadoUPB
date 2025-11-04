@@ -71,7 +71,7 @@ export const ProfileHeaderWithBackground: React.FC<ProfileHeaderWithBackgroundPr
             </Text>
           ) : (
             <Text style={[styles.bio, { color: colors.muted }]}>
-              traficantes de gomitas
+              Mi biografía
             </Text>
           )}
 
