@@ -14,3 +14,4 @@ export { useUserLocation } from './useUserLocation';
 export { useOportunidadesConDistancia } from './useOportunidadesConDistancia';
 export { useRouteCalculation } from './useRouteCalculation';
 export { useLocationManager } from './useLocationManager';
+export { useRolePermissions } from './useRolePermissions';

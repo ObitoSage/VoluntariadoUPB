@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import {
   useThemeColors,
   useOportunidades,
   useLocationManager,
 } from '../../../src/hooks';
+import { useRolePermissions } from '../../../src/hooks/useRolePermissions';
 import { Oportunidad } from '../../../src/types';
 import { ErrorModal, SuccessModal, ConfirmModal } from '../../../src/components';
 import {
@@ -19,7 +21,16 @@ import {
 export default function GestionUbicacionesScreen() {
   const { colors } = useThemeColors();
   const { oportunidades, loading } = useOportunidades();
+  const { canManageOpportunities } = useRolePermissions();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Protección: redirigir si no es admin
+  useEffect(() => {
+    if (!canManageOpportunities()) {
+      router.replace('/(drawer)/(tabs)');
+    }
+  }, [canManageOpportunities]);
 
   // Hook para manejar la lógica de ubicaciones
   const locationManager = useLocationManager();
