@@ -28,6 +28,7 @@ import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
 import { useSubmitFeedbackAnimation } from '../../../../src/hooks/useCardAnimation';
 import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks/useSharedTransition';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
+import { PostulacionExitosaModal } from '../../../../src/components';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
 
@@ -59,6 +60,7 @@ export default function OportunidadDetailScreen() {
   const [telefono, setTelefono] = useState('');
   const [errors, setErrors] = useState<{ motivacion?: string; telefono?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Cargar oportunidad desde Firebase
   useEffect(() => {
@@ -307,14 +309,8 @@ export default function OportunidadDetailScreen() {
       setDisponibilidad('flexible');
       setErrors({});
       
-      Alert.alert(
-        '¡Postulación Exitosa!',
-        'Tu postulación ha sido registrada. La organización se pondrá en contacto contigo.',
-        [{ 
-          text: 'Excelente',
-          onPress: () => router.back()
-        }]
-      );
+      // Mostrar modal de éxito
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error al crear postulación:', error);
       setIsSubmitting(false);
@@ -777,6 +773,14 @@ export default function OportunidadDetailScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      <PostulacionExitosaModal
+        visible={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          router.back();
+        }}
+      />
     </View>
   );
 }

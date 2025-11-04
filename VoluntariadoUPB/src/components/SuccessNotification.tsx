@@ -16,11 +16,11 @@ interface SuccessNotificationProps {
   onHide: () => void;
 }
 
-export default function SuccessNotification({ 
+export const SuccessNotification: React.FC<SuccessNotificationProps> = ({ 
   visible, 
   message,
   onHide,
-}: SuccessNotificationProps) {
+}) => {
   const translateY = new Animated.Value(-100);
   const opacity = new Animated.Value(0);
 

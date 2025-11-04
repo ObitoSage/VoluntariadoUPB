@@ -25,11 +25,11 @@ interface ForgotPasswordModalProps {
 
 const { width } = Dimensions.get('window');
 
-export default function ForgotPasswordModal({ 
+export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ 
   visible, 
   onClose,
   onSuccess,
-}: ForgotPasswordModalProps) {
+}) => {
   const { colors } = useThemeColors();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
