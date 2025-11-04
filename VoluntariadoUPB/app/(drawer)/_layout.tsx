@@ -120,6 +120,14 @@ export default function DrawerLayout() {
             },
           }}
         />
+
+        {/* Pantalla de pruebas - Oculta del drawer */}
+        <Drawer.Screen
+          name="notification-test"
+          options={{
+            drawerItemStyle: { display: 'none', height: 0 },
+          }}
+        />
         
         {/* Cerrar Sesión - Estilo Destructivo */}
         <Drawer.Screen

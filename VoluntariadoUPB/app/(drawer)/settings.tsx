@@ -1,9 +1,11 @@
-import React from 'react';
-import { StyleSheet, Switch, Text, View, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Switch, Text, View, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 import { useThemeStore } from '../../src/store/useThemeStore';
+import { useNotifications } from '../../src/hooks';
+import { useAuthStore } from '../../src/store/useAuthStore';
 import type { ThemeColors } from '../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -92,6 +94,76 @@ const SettingsScreen = () => {
   const { theme, colors } = useThemeColors();
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  
+  const { user } = useAuthStore();
+  const { enableNotifications, disableNotifications, checkPermissions } = useNotifications();
+  
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Verificar estado inicial de las notificaciones
+  useEffect(() => {
+    const checkInitialStatus = async () => {
+      const hasPermission = await checkPermissions();
+      setNotificationsEnabled(hasPermission);
+    };
+    checkInitialStatus();
+  }, []);
+
+  const handleToggleNotifications = async (value: boolean) => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      if (value) {
+        // Activar notificaciones
+        await enableNotifications();
+        const hasPermission = await checkPermissions();
+        
+        if (hasPermission) {
+          setNotificationsEnabled(true);
+          Alert.alert(
+            '✅ Notificaciones activadas',
+            'Recibirás alertas sobre tus postulaciones y nuevas oportunidades.',
+            [{ text: 'Entendido' }]
+          );
+        } else {
+          Alert.alert(
+            '⚠️ Permisos requeridos',
+            'Para recibir notificaciones, debes habilitar los permisos en la configuración de tu dispositivo.',
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              { 
+                text: 'Abrir Configuración', 
+                onPress: () => {
+                  // Abrir configuración del dispositivo
+                  // Linking.openSettings(); // Descomentar para implementar
+                }
+              }
+            ]
+          );
+        }
+      } else {
+        // Desactivar notificaciones
+        await disableNotifications();
+        setNotificationsEnabled(false);
+        Alert.alert(
+          'Notificaciones desactivadas',
+          'Ya no recibirás alertas push. Puedes volver a activarlas en cualquier momento.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo cambiar la configuración de notificaciones. Por favor, intenta de nuevo.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ScrollView 
@@ -150,24 +222,71 @@ const SettingsScreen = () => {
             <View style={styles.preferenceRow}>
               <View style={styles.preferenceLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#10b98120' }]}>
-                  <Ionicons name="notifications" size={22} color="#10b981" />
+                  <Ionicons 
+                    name={notificationsEnabled ? "notifications" : "notifications-off"} 
+                    size={22} 
+                    color="#10b981" 
+                  />
                 </View>
                 <View style={styles.preferenceTextContainer}>
                   <Text style={styles.preferenceLabel}>Notificaciones Push</Text>
                   <Text style={styles.preferenceDescription}>
-                    Próximamente disponible
+                    {notificationsEnabled 
+                      ? 'Recibirás alertas de tus postulaciones' 
+                      : 'No recibirás notificaciones push'}
                   </Text>
                 </View>
               </View>
               <Switch
-                value={false}
-                disabled
-                trackColor={{ false: colors.muted, true: colors.primary }}
+                value={notificationsEnabled}
+                onValueChange={handleToggleNotifications}
+                disabled={isLoading}
+                trackColor={{ 
+                  false: colors.switchTrackOff, 
+                  true: colors.switchTrackOn 
+                }}
                 thumbColor={colors.switchThumb}
+                ios_backgroundColor={colors.switchTrackOff}
               />
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.infoCard}>
+              <Text style={styles.infoText}>
+                🔔 Recibirás notificaciones cuando:
+              </Text>
+              <Text style={[styles.infoText, { marginTop: 8, marginLeft: 16 }]}>
+                • Tu postulación sea aceptada o rechazada{'\n'}
+                • Se publiquen nuevas oportunidades{'\n'}
+                • Se acerque el deadline de una oportunidad{'\n'}
+                • Haya recordatorios de eventos
+              </Text>
             </View>
           </View>
         </View>
+
+        {/* Prueba de Notificaciones - Para Demostración */}
+        {__DEV__ && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Pruebas (Solo Desarrollo)</Text>
+            <View style={styles.card}>
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceLeft}>
+                  <View style={[styles.iconContainer, { backgroundColor: '#8b5cf620' }]}>
+                    <Ionicons name="flask" size={22} color="#8b5cf6" />
+                  </View>
+                  <View style={styles.preferenceTextContainer}>
+                    <Text style={styles.preferenceLabel}>Probar Notificaciones</Text>
+                    <Text style={styles.preferenceDescription}>
+                      Envía notificaciones de prueba para demostración
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Privacidad */}
         <View style={styles.section}>

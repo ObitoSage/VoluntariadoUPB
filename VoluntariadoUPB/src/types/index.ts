@@ -165,6 +165,7 @@ export interface LoadingSkeletonProps {
 export const COLLECTIONS = {
   OPORTUNIDADES: 'oportunidades',
   USERS: 'users',
+  USUARIOS: 'users', // Alias para notificaciones
   POSTULACIONES: 'postulaciones',
 } as const;
 

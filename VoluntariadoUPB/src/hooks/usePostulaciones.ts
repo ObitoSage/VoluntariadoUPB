@@ -78,6 +78,29 @@ export const usePostulaciones = () => {
     }
   };
 
+  const fetchOportunidadData = async (oportunidadId: string) => {
+    if (!oportunidadId) return null;
+
+    try {
+      const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, oportunidadId);
+      const oportunidadSnap = await getDoc(oportunidadRef);
+      
+      if (oportunidadSnap.exists()) {
+        const oportunidadData = oportunidadSnap.data();
+        return {
+          titulo: oportunidadData.titulo || 'Sin título',
+          organizacion: oportunidadData.organizacion || 'Sin organización',
+          location: `${oportunidadData.campus || 'Sin campus'}, ${oportunidadData.ciudad || 'Sin ciudad'}`,
+          descripcion: oportunidadData.descripcion || 'Sin descripción',
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching oportunidad data:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (!user?.uid) {
       setPostulaciones([]);
@@ -109,6 +132,15 @@ export const usePostulaciones = () => {
                 }
               }
 
+              // Buscar datos de la oportunidad si faltan en la postulación
+              let oportunidadData = {};
+              if (!data.titulo || !data.organizacion || !data.location || !data.descripcion) {
+                const oportunidad = await fetchOportunidadData(data.oportunidadId);
+                if (oportunidad) {
+                  oportunidadData = oportunidad;
+                }
+              }
+
               const applicationDate = data.applicationDate?.toDate?.() || new Date();
               const createdAt = data.createdAt?.toDate?.() || new Date();
               const updatedAt = data.updatedAt?.toDate?.() || new Date();
@@ -116,6 +148,7 @@ export const usePostulaciones = () => {
               return {
                 id: docSnap.id,
                 ...data,
+                ...oportunidadData,
                 ...estudianteData,
                 applicationDate,
                 createdAt,

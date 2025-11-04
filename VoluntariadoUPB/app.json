@@ -37,7 +37,11 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM"
       ],
       "config": {
         "googleMaps": {
@@ -55,6 +59,14 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "VoluntariadoUPB necesita acceder a tu ubicación para mostrarte oportunidades de voluntariado cercanas, calcular rutas y tiempos de viaje."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#217868",
+          "sounds": ["./assets/notification-sound.wav"]
         }
       ]
     ]

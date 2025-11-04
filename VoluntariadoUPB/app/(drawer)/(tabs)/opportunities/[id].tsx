@@ -27,6 +27,7 @@ import { useUserProfile } from '../../../../src/hooks/useUserProfile';
 import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
 import { useSubmitFeedbackAnimation } from '../../../../src/hooks/useCardAnimation';
 import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks/useSharedTransition';
+import { usePostulacion } from '../../../../src/hooks/usePostulacion';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
 import { PostulacionExitosaModal } from '../../../../src/components';
 
@@ -39,6 +40,7 @@ export default function OportunidadDetailScreen() {
   const { user } = useAuthStore();
   const { user: userProfile, toggleFavorito } = useUserProfile();
   const { isStudent, canManageOpportunities } = useRolePermissions();
+  const { crearPostulacion } = usePostulacion();
 
   const [voluntariado, setVoluntariado] = useState<Oportunidad | null>(null);
   const [loading, setLoading] = useState(true);
@@ -257,7 +259,7 @@ export default function OportunidadDetailScreen() {
       return;
     }
 
-    if (!user?.uid) {
+    if (!user?.uid || !voluntariado) {
       Alert.alert('Error', 'Debes iniciar sesión para postularte');
       return;
     }
@@ -270,49 +272,35 @@ export default function OportunidadDetailScreen() {
     });
     
     try {
-      // Crear postulación en Firebase
-      const postulacionData = {
-        estudianteId: user.uid,
-        oportunidadId: id,
-        titulo: voluntariado.titulo,
-        organizacion: voluntariado.organizacion,
-        descripcion: voluntariado.descripcion,
-        location: `${voluntariado.campus}, ${voluntariado.ciudad}`,
-        status: 'submitted',
-        estado: 'submitted',
-        confirmado: false,
+      console.log('🚀 Iniciando postulación...');
+      
+      // 🔥 USAR EL HOOK QUE TIENE LAS NOTIFICACIONES
+      const result = await crearPostulacion(voluntariado, {
         motivacion,
         disponibilidad,
         telefono: telefono || '',
-        applicationDate: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      });
 
-      await addDoc(collection(db, COLLECTIONS.POSTULACIONES), postulacionData);
-
-      // Decrementar cupos disponibles
-      if (id) {
-        const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, id as string);
-        await updateDoc(oportunidadRef, {
-          cuposDisponibles: increment(-1),
-        });
+      if (result.success) {
+        console.log('✅ Postulación creada exitosamente con notificaciones');
+        
+        setIsSubmitting(false);
+        setModalVisible(false);
+        resetAnimation();
+        
+        // Limpiar formulario
+        setMotivacion('');
+        setTelefono('');
+        setDisponibilidad('flexible');
+        setErrors({});
+        
+        // Mostrar modal de éxito
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(result.error || 'Error desconocido');
       }
-      
-      setIsSubmitting(false);
-      setModalVisible(false);
-      resetAnimation();
-      
-      // Limpiar formulario
-      setMotivacion('');
-      setTelefono('');
-      setDisponibilidad('flexible');
-      setErrors({});
-      
-      // Mostrar modal de éxito
-      setShowSuccessModal(true);
     } catch (error) {
-      console.error('Error al crear postulación:', error);
+      console.error('❌ Error al crear postulación:', error);
       setIsSubmitting(false);
       resetAnimation();
       Alert.alert(
