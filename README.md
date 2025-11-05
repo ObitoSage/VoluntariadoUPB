@@ -12,9 +12,6 @@
 - [Arquitectura](#-arquitectura)
 - [Tecnologías](#-tecnologías)
 - [Setup del Proyecto](#-setup-del-proyecto)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Configuración](#-configuración)
-- [Scripts Disponibles](#-scripts-disponibles)
 - [Autores](#-autores)
 
 ---
