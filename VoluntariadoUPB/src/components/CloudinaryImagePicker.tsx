@@ -14,6 +14,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { useCloudinaryUpload } from '../hooks/useCloudinaryUpload';
 import { useAuthStore } from '../store/useAuthStore';
 import { CLOUDINARY_FOLDERS, getCloudinaryUrl } from '../../config/cloudinary';
+import { ImagePickerModal } from './ImagePickerModal';
 
 interface CloudinaryImagePickerProps {
   currentImageUri?: string;
@@ -40,6 +41,7 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
   const { uploadImage, uploading, progress } = useCloudinaryUpload();
   const { user } = useAuthStore();
   const [localUri, setLocalUri] = useState<string | undefined>(currentImageUri);
+  const [showModal, setShowModal] = useState(false);
 
   const requestPermissions = async (type: 'camera' | 'library') => {
     try {
@@ -120,36 +122,21 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
   };
 
   const showImageSourceOptions = () => {
-    const options: any[] = [
-      {
-        text: '📷 Tomar foto',
-        onPress: () => handlePickImage('camera'),
-      },
-      {
-        text: '🖼️ Elegir de galería',
-        onPress: () => handlePickImage('library'),
-      },
-    ];
+    setShowModal(true);
+  };
 
-    // Agregar opción de usar foto de Google si está disponible
-    if (user?.photoURL && !currentImageUri) {
-      options.unshift({
-        text: '👤 Usar foto de Google',
-        onPress: handleUseGooglePhoto,
-      });
-    }
+  const handleModalGallery = () => {
+    setShowModal(false);
+    setTimeout(() => handlePickImage('library'), 300);
+  };
 
-    options.push({
-      text: 'Cancelar',
-      style: 'cancel',
-    });
+  const handleModalCamera = () => {
+    setShowModal(false);
+    setTimeout(() => handlePickImage('camera'), 300);
+  };
 
-    Alert.alert(
-      'Seleccionar imagen',
-      'Elige una opción',
-      options,
-      { cancelable: true }
-    );
+  const handleModalCancel = () => {
+    setShowModal(false);
   };
 
   const handleUseGooglePhoto = async () => {
@@ -250,6 +237,14 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
           />
         </View>
       )}
+
+      <ImagePickerModal
+        visible={showModal}
+        title={transformationType === 'background' ? 'Imagen de Fondo' : 'Foto de Perfil'}
+        onSelectGallery={handleModalGallery}
+        onSelectCamera={handleModalCamera}
+        onCancel={handleModalCancel}
+      />
     </View>
   );
 };
