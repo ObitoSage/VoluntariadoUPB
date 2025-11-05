@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import { calculateDistance, estimateTravelTime } from '../utils/locationUtils';
 
@@ -36,12 +36,37 @@ export function useRouteCalculation(
   const [route, setRoute] = useState<RouteData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Usar refs para evitar re-renders innecesarios
+  const prevCoordsRef = useRef<{
+    start: string;
+    end: string;
+    mode: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!startCoords || !endCoords) {
       setRoute(null);
+      setLoading(false);
       return;
     }
+
+    // Crear un string único de las coordenadas para comparación
+    const coordsKey = `${startCoords.latitude},${startCoords.longitude}-${endCoords.latitude},${endCoords.longitude}-${mode}`;
+    
+    // Evitar recalcular si las coordenadas no han cambiado
+    if (prevCoordsRef.current?.start === `${startCoords.latitude},${startCoords.longitude}` &&
+        prevCoordsRef.current?.end === `${endCoords.latitude},${endCoords.longitude}` &&
+        prevCoordsRef.current?.mode === mode) {
+      return;
+    }
+
+    // Actualizar ref
+    prevCoordsRef.current = {
+      start: `${startCoords.latitude},${startCoords.longitude}`,
+      end: `${endCoords.latitude},${endCoords.longitude}`,
+      mode,
+    };
 
     setLoading(true);
     setError(null);
@@ -91,7 +116,7 @@ export function useRouteCalculation(
       setError('Error al calcular la ruta');
       setLoading(false);
     }
-  }, [startCoords, endCoords, mode]);
+  }, [startCoords?.latitude, startCoords?.longitude, endCoords?.latitude, endCoords?.longitude, mode]);
 
   return {
     route,

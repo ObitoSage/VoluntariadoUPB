@@ -89,11 +89,78 @@ export function generateMapDeeplink(
   const encodedLabel = encodeURIComponent(label);
 
   if (provider === 'apple') {
-    return `http://maps.apple.com/?daddr=${latitude},${longitude}&q=${encodedLabel}`;
+    // Apple Maps - Formato óptimo para navegación
+    // Este formato abre Apple Maps con las direcciones desde la ubicación actual
+    // saddr: source address (origen) - vacío para usar ubicación actual
+    // daddr: destination address (destino)
+    // dirflg: tipo de dirección (d=driving, w=walking, r=transit)
+    return `http://maps.apple.com/?saddr=Current+Location&daddr=${latitude},${longitude}&dirflg=d`;
   }
 
-  // Google Maps
-  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&destination_place_id=${encodedLabel}`;
+  // Google Maps - usar el esquema correcto con API v1
+  // travelmode puede ser: driving, walking, bicycling, transit
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`;
+}
+
+/**
+ * Intenta abrir el mapa nativo con múltiples intentos de fallback
+ * Esta función es más robusta y prueba diferentes esquemas de URL
+ */
+export async function openNativeMaps(
+  latitude: number,
+  longitude: number,
+  label: string
+): Promise<boolean> {
+  const { Linking } = require('react-native');
+  
+  if (Platform.OS === 'ios') {
+    // Intentar múltiples esquemas para iOS
+    const iosUrls = [
+      `maps://?ll=${latitude},${longitude}&q=${encodeURIComponent(label)}&dirflg=d`,
+      `http://maps.apple.com/?saddr=Current+Location&daddr=${latitude},${longitude}&dirflg=d`,
+      `http://maps.apple.com/?ll=${latitude},${longitude}&q=${encodeURIComponent(label)}`,
+    ];
+
+    for (const url of iosUrls) {
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+          return true;
+        }
+      } catch (error) {
+        console.log('Failed to open with URL:', url, error);
+      }
+    }
+  } else {
+    // Android - intentar Google Maps primero, luego fallback
+    const androidUrls = [
+      `google.navigation:q=${latitude},${longitude}`,
+      `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`,
+    ];
+
+    for (const url of androidUrls) {
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+          return true;
+        }
+      } catch (error) {
+        console.log('Failed to open with URL:', url, error);
+      }
+    }
+  }
+
+  // Fallback final: URL web de Google Maps (funciona en todos lados)
+  try {
+    const webUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    await Linking.openURL(webUrl);
+    return true;
+  } catch (error) {
+    console.error('All map opening attempts failed:', error);
+    return false;
+  }
 }
 
 /**

@@ -24,6 +24,7 @@ export const useOportunidades = () => {
   } = useOportunidadesStore();
   
   const [refreshing, setRefreshing] = useState(false);
+  const [allOportunidades, setAllOportunidades] = useState<Oportunidad[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -50,8 +51,11 @@ export const useOportunidades = () => {
           ...doc.data(),
         })) as Oportunidad[];
 
+        // Guardar todas las oportunidades sin filtrar
+        setAllOportunidades(oportunidadesData);
+        
+        // Aplicar filtros y actualizar store
         const filtered = applyClientFilters(oportunidadesData, filtros);
-
         setOportunidades(filtered);
         setLoading(false);
       },
@@ -65,14 +69,13 @@ export const useOportunidades = () => {
     return () => unsubscribe();
   }, [filtros.busqueda]);
 
+  // Aplicar filtros cuando cambian, usando TODAS las oportunidades
   useEffect(() => {
-    if (oportunidades.length > 0) {
-      const filtered = applyClientFilters(oportunidades, filtros);
-      if (JSON.stringify(filtered) !== JSON.stringify(oportunidades)) {
-        setOportunidades(filtered);
-      }
+    if (allOportunidades.length > 0) {
+      const filtered = applyClientFilters(allOportunidades, filtros);
+      setOportunidades(filtered);
     }
-  }, [filtros.campus, filtros.categoria, filtros.modalidad, filtros.status, filtros.habilidades]);
+  }, [filtros.campus, filtros.categoria, filtros.modalidad, filtros.status, filtros.habilidades, allOportunidades]);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -81,13 +84,17 @@ export const useOportunidades = () => {
       const q = query(collection(db, COLLECTIONS.OPORTUNIDADES), ...constraints);
       const snapshot = await getDocs(q);
       
-      let oportunidadesData = snapshot.docs.map((doc) => ({
+      const oportunidadesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Oportunidad[];
 
-      oportunidadesData = applyClientFilters(oportunidadesData, filtros);
-      setOportunidades(oportunidadesData);
+      // Guardar todas las oportunidades
+      setAllOportunidades(oportunidadesData);
+      
+      // Aplicar filtros
+      const filtered = applyClientFilters(oportunidadesData, filtros);
+      setOportunidades(filtered);
     } catch (err) {
       console.error('Error refreshing oportunidades:', err);
       setError('Error al actualizar');
