@@ -15,6 +15,7 @@ import { useCloudinaryUpload } from '../hooks/useCloudinaryUpload';
 import { useAuthStore } from '../store/useAuthStore';
 import { CLOUDINARY_FOLDERS, getCloudinaryUrl } from '../../config/cloudinary';
 import { ImagePickerModal } from './ImagePickerModal';
+import { ImageUploadSuccessModal } from './ImageUploadSuccessModal';
 
 interface CloudinaryImagePickerProps {
   currentImageUri?: string;
@@ -42,6 +43,7 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
   const { user } = useAuthStore();
   const [localUri, setLocalUri] = useState<string | undefined>(currentImageUri);
   const [showModal, setShowModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const requestPermissions = async (type: 'camera' | 'library') => {
     try {
@@ -108,7 +110,7 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
           const optimizedUrl = getCloudinaryUrl(uploadResult.publicId, transformationType);
           onImageSelected(optimizedUrl, uploadResult.publicId);
           setLocalUri(optimizedUrl);
-          Alert.alert('¡Éxito!', 'Imagen actualizada correctamente');
+          setShowSuccessModal(true);
         } else {
           Alert.alert('Error', uploadResult.error || 'No se pudo subir la imagen');
           setLocalUri(currentImageUri);
@@ -151,11 +153,11 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
           const optimizedUrl = getCloudinaryUrl(uploadResult.publicId, transformationType);
           onImageSelected(optimizedUrl, uploadResult.publicId);
           setLocalUri(optimizedUrl);
-          Alert.alert('¡Listo!', 'Foto de Google aplicada correctamente');
+          setShowSuccessModal(true);
         } else {
           // Si falla, usar la URL de Google directamente
           onImageSelected(user.photoURL, '');
-          Alert.alert('¡Listo!', 'Foto de Google aplicada correctamente');
+          setShowSuccessModal(true);
         }
       } catch (error) {
         console.error('Error using Google photo:', error);
@@ -244,6 +246,11 @@ export const CloudinaryImagePicker: React.FC<CloudinaryImagePickerProps> = ({
         onSelectGallery={handleModalGallery}
         onSelectCamera={handleModalCamera}
         onCancel={handleModalCancel}
+      />
+
+      <ImageUploadSuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
       />
     </View>
   );

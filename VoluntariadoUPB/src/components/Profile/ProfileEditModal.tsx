@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { CloudinaryImagePicker } from '../CloudinaryImagePicker';
+import { ProfileUpdateSuccessModal } from '../ProfileUpdateSuccessModal';
 import { CAMPUS_OPTIONS } from '../../types';
 import type { User } from '../../types';
 
@@ -33,6 +34,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 }) => {
   const { colors } = useThemeColors();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editForm, setEditForm] = useState<Partial<User>>({
     nombre: '',
     bio: '',
@@ -90,6 +92,11 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setNewInterest('');
   };
 
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    onClose();
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert('Error', 'Por favor corrige los errores en el formulario');
@@ -100,8 +107,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     try {
       const result = await onSubmit(editForm);
       if (result.success) {
-        Alert.alert('Éxito', 'Perfil actualizado correctamente');
-        onClose();
+        setShowSuccessModal(true);
       } else {
         Alert.alert('Error', 'No se pudo actualizar el perfil');
       }
@@ -148,6 +154,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   };
 
   return (
+    <>
     <Modal
       visible={visible}
       animationType="slide"
@@ -404,6 +411,12 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
+
+    <ProfileUpdateSuccessModal
+      visible={showSuccessModal}
+      onClose={handleSuccessModalClose}
+    />
+  </>
   );
 };
 
