@@ -15,6 +15,8 @@ export { SuccessModal } from './SuccessModal';
 export { ConfirmModal } from './ConfirmModal';
 export { LogoutModal } from './LogoutModal';
 export { ImagePickerModal } from './ImagePickerModal';
+export { ImageUploadSuccessModal } from './ImageUploadSuccessModal';
+export { ProfileUpdateSuccessModal } from './ProfileUpdateSuccessModal';
 export { CustomMarker } from './CustomMarker';
 export { MarkerCallout } from './MarkerCallout';
 export { MapFilters } from './MapFilters';
