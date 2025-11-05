@@ -58,7 +58,7 @@
 
 ## 🎥 Demo
 
-> 📺 **[Ver Video Demo en YouTube](https://youtu.be/x7SMUoQIKZs?feature=shared)**
+> 📺 **[Ver Video Demo en YouTube](https://youtu.be/x7SMUoQIKZs?feature=shared)**  
 > **[Ver Video Demo en Drive](https://drive.google.com/file/d/1Ep1Nv3pEXVZzJRgda5dU2OKPF9KW78-Y/view?usp=drivesdk)**
 
 El video incluye:
@@ -186,8 +186,8 @@ VoluntariadoUPB/
 
 ## 👥 Autores
 
-**Fabian Azeñas** -
-**Edwin Burgos** -
+**Fabian Azeñas**  
+**Edwin Burgos**  
 **Camilo Zuleta**
 - GitHub: [@ObitoSage](https://github.com/ObitoSage)
 - Proyecto: VoluntariadoUPB - Universidad Privada Boliviana
