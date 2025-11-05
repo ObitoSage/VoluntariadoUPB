@@ -186,8 +186,8 @@ VoluntariadoUPB/
 
 ## 👥 Autores
 
-**Fabian Azeñas**
-**Edwin Burgos**
+**Fabian Azeñas** -
+**Edwin Burgos** -
 **Camilo Zuleta**
 - GitHub: [@ObitoSage](https://github.com/ObitoSage)
 - Proyecto: VoluntariadoUPB - Universidad Privada Boliviana
