@@ -29,7 +29,7 @@ import { useSubmitFeedbackAnimation } from '../../../../src/hooks/useCardAnimati
 import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks/useSharedTransition';
 import { usePostulacion } from '../../../../src/hooks/usePostulacion';
 import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
-import { PostulacionExitosaModal } from '../../../../src/components';
+import { PostulacionExitosaModal, LocationSection } from '../../../../src/components';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
 
@@ -195,11 +195,6 @@ export default function OportunidadDetailScreen() {
       year: 'numeric',
     });
   };
-
-  // Format ubicación para mostrar
-  const ubicacionText = voluntariado.ubicacion
-    ? `${voluntariado.ciudad}, ${voluntariado.campus}`
-    : `${voluntariado.campus}, ${voluntariado.ciudad}`;
 
   const validateForm = (): boolean => {
     const newErrors: { motivacion?: string; telefono?: string } = {};
@@ -419,16 +414,6 @@ export default function OportunidadDetailScreen() {
 
           <View style={styles.infoItem}>
             <View style={styles.infoIcon}>
-              <Ionicons name="location" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.subtitle }]}>Ubicación</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{ubicacionText}</Text>
-            </View>
-          </View>
-
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
               <Ionicons 
                 name={MODALIDADES.find(m => m.key === voluntariado.modalidad)?.icon as any || 'location'} 
                 size={20} 
@@ -443,6 +428,12 @@ export default function OportunidadDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* Sección de Ubicación con Mapa */}
+        <LocationSection 
+          oportunidad={voluntariado}
+          onMapPress={() => router.push(`/(drawer)/(tabs)/map/${voluntariado.id}`)}
+        />
 
         {/* Disponibilidad */}
         <View style={[styles.section, { backgroundColor: screenColors.cardBackground }]}>

@@ -9,6 +9,7 @@ import {
   ScrollView,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +19,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
 import { useThemeColors, useUserLocation, useRouteCalculation } from '../../../../src/hooks';
 import { Oportunidad, COLLECTIONS } from '../../../../src/types';
-import { getRegionForCoordinates, generateMapDeeplink } from '../../../../src/utils/mapHelpers';
+import { getRegionForCoordinates, openNativeMaps } from '../../../../src/utils/mapHelpers';
 import { formatDistance, formatTravelTime } from '../../../../src/utils/locationUtils';
 
 type TravelMode = 'walking' | 'driving' | 'transit';
@@ -90,31 +91,38 @@ export default function RutaScreen() {
   }, [route]);
 
   // Handlers
-  const handleIniciarNavegacion = () => {
+  const handleIniciarNavegacion = async () => {
     if (!oportunidad?.ubicacion) return;
 
-    const url = generateMapDeeplink(
+    console.log('🗺️ Opening maps from route screen...');
+    console.log('📍 Coordinates:', { lat: oportunidad.ubicacion.lat, lng: oportunidad.ubicacion.lng });
+    console.log('📱 Platform:', Platform.OS);
+
+    const success = await openNativeMaps(
       oportunidad.ubicacion.lat,
       oportunidad.ubicacion.lng,
-      oportunidad.titulo,
-      Platform.OS === 'ios' ? 'apple' : 'google'
+      oportunidad.titulo
     );
 
-    Linking.openURL(url).catch((err) => {
-      console.error('Error opening maps app:', err);
-    });
+    if (!success) {
+      Alert.alert(
+        'Error',
+        'No se pudo abrir la aplicación de mapas. Verifica que tengas una app de mapas instalada.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const getPolylineColor = () => {
     switch (travelMode) {
       case 'walking':
-        return '#34C759'; // Verde
+        return '#FF3B30'; // Rojo vibrante
       case 'driving':
-        return '#007AFF'; // Azul
+        return '#FF3B30'; // Rojo vibrante
       case 'transit':
-        return '#FF9500'; // Naranja
+        return '#FF3B30'; // Rojo vibrante
       default:
-        return '#007AFF';
+        return '#FF3B30'; // Rojo vibrante
     }
   };
 
@@ -200,7 +208,7 @@ export default function RutaScreen() {
           <Polyline
             coordinates={route.polyline}
             strokeColor={getPolylineColor()}
-            strokeWidth={4}
+            strokeWidth={6}
             lineDashPattern={getPolylinePattern()}
           />
         )}
