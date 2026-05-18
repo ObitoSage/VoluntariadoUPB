@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -8,7 +9,7 @@ import {
   useOportunidades,
   useLocationManager,
 } from '../../../src/hooks';
-import { useRolePermissions } from '../../../src/hooks/useRolePermissions';
+import { useRolePermissions } from '../../../src/hooks';
 import { Oportunidad } from '../../../src/types';
 import { ErrorModal, SuccessModal, ConfirmModal } from '../../../src/components';
 import {

@@ -14,10 +14,11 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/useAuthStore';
-import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../src/hooks';
+import { SuccessNotification } from '../../src/components';
 
-const MAX_EMAIL_LENGTH = 30;
-const MAX_PASSWORD_LENGTH = 30;
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 max email length
+const MAX_PASSWORD_LENGTH = 128;
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
+  const [showConfirmNotification, setShowConfirmNotification] = useState(false);
   
   const { signUp, setError, clearError } = useAuthStore();
   const { colors } = useThemeColors();
@@ -49,12 +51,21 @@ export default function RegisterScreen() {
 
     setLocalLoading(true);
     try {
-      await signUp(email, password);
+      const { needsConfirmation } = await signUp(email, password);
       const currentError = useAuthStore.getState().error;
-      if (!currentError) {
+      if (currentError) return;
+
+      if (needsConfirmation) {
+        // Supabase requires email confirmation before the session is active.
+        // Show a notification and stay on the register screen so the user
+        // knows to check their inbox.
+        setShowConfirmNotification(true);
+      } else {
+        // Email confirmation is disabled — session is active immediately.
         router.replace('/(drawer)/(tabs)');
       }
     } catch (error) {
+      // Error already set in the store; the ErrorModal in _layout.tsx will show it.
     } finally {
       setLocalLoading(false);
     }
@@ -206,6 +217,15 @@ export default function RegisterScreen() {
         </View>
       </ScrollView>
       </KeyboardAvoidingView>
+
+      <SuccessNotification
+        visible={showConfirmNotification}
+        message="¡Cuenta creada! Revisa tu correo y confirma tu dirección para iniciar sesión."
+        onHide={() => {
+          setShowConfirmNotification(false);
+          router.replace('/(auth)/login');
+        }}
+      />
     </View>
   );
 }

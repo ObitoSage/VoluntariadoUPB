@@ -19,16 +19,15 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
-import { db } from '../../../../config/firebase';
+import { supabase } from '../../../../config/supabase';
 import { useAuthStore } from '../../../../src/store/useAuthStore';
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
-import { useUserProfile } from '../../../../src/hooks/useUserProfile';
-import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
-import { useSubmitFeedbackAnimation } from '../../../../src/hooks/useCardAnimation';
-import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks/useSharedTransition';
-import { usePostulacion } from '../../../../src/hooks/usePostulacion';
-import { Oportunidad, COLLECTIONS, MODALIDADES } from '../../../../src/types';
+import { useThemeColors } from '../../../../src/hooks';
+import { useUserProfile } from '../../../../src/hooks';
+import { useRolePermissions } from '../../../../src/hooks';
+import { useSubmitFeedbackAnimation } from '../../../../src/hooks';
+import { useSharedElementTransition, useFadeScaleTransition } from '../../../../src/hooks';
+import { usePostulacion } from '../../../../src/hooks';
+import { Oportunidad, MODALIDADES } from '../../../../src/types';
 import { PostulacionExitosaModal, LocationSection } from '../../../../src/components';
 
 type DisponibilidadType = 'fin_de_semana' | 'entre_semana' | 'flexible';
@@ -64,21 +63,46 @@ export default function OportunidadDetailScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Cargar oportunidad desde Firebase
+  // Cargar oportunidad desde Supabase
   useEffect(() => {
     const fetchOportunidad = async () => {
       if (!id) return;
       
       try {
         setLoading(true);
-        const oportunidadRef = doc(db, COLLECTIONS.OPORTUNIDADES, id as string);
-        const oportunidadSnap = await getDoc(oportunidadRef);
-        
-        if (oportunidadSnap.exists()) {
+        const { data, error: fetchError } = await supabase
+          .from('oportunidades')
+          .select('*')
+          .eq('id', id as string)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        if (data) {
+          const row = data as any;
           setVoluntariado({
-            id: oportunidadSnap.id,
-            ...oportunidadSnap.data(),
-          } as Oportunidad);
+            id: row.id,
+            titulo: row.titulo,
+            titleLower: row.title_lower,
+            descripcion: row.descripcion,
+            organizacion: row.organizacion,
+            organizacionId: row.organizacion_id,
+            cover: row.cover,
+            campus: row.campus,
+            ciudad: row.ciudad,
+            categoria: row.categoria,
+            modalidad: row.modalidad,
+            horasSemana: row.horas_semana,
+            deadline: row.deadline,
+            cupos: row.cupos,
+            cuposDisponibles: row.cupos_disponibles,
+            ubicacion: row.ubicacion,
+            habilidades: row.habilidades ?? [],
+            status: row.status,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            createdBy: row.created_by ?? '',
+          });
         } else {
           setVoluntariado(null);
         }
@@ -187,8 +211,8 @@ export default function OportunidadDetailScreen() {
 
   // Formatear fecha si es un timestamp
   const formatDeadline = (deadline: any) => {
-    if (!deadline) return 'Fecha no especificada';
-    const date = deadline.toDate ? deadline.toDate() : new Date(deadline);
+    const date = deadline ? new Date(deadline) : null;
+    if (!date) return 'Fecha no especificada';
     return date.toLocaleDateString('es-ES', {
       day: 'numeric',
       month: 'long',
@@ -254,7 +278,7 @@ export default function OportunidadDetailScreen() {
       return;
     }
 
-    if (!user?.uid || !voluntariado) {
+    if (!user?.id || !voluntariado) {
       Alert.alert('Error', 'Debes iniciar sesión para postularte');
       return;
     }

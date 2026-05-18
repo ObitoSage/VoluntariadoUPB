@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'rea
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../src/hooks';
 import type { ThemeColors } from '../theme/colors';
 import { diagnosticarNotificaciones } from '../../src/utils/notificationDiagnostic';
 

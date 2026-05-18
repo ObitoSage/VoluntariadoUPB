@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
-import { useOportunidades } from '../../../../src/hooks/useOportunidades';
+import { useThemeColors } from '../../../../src/hooks';
+import { useOportunidades } from '../../../../src/hooks';
 import { useOportunidadesStore } from '../../../../src/store/oportunidadesStore';
-import { useUserProfile } from '../../../../src/hooks/useUserProfile';
-import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
-import { useAnimatedRefresh } from '../../../../src/hooks/usePullToRefresh';
+import { useUserProfile } from '../../../../src/hooks';
+import { useRolePermissions } from '../../../../src/hooks';
+import { useAnimatedRefresh } from '../../../../src/hooks';
 import { OportunidadCard, FilterChip, EmptyState, LoadingSkeleton, CreateOportunidadModal } from '../../../../src/components';
 import {
   CATEGORIAS,
@@ -30,8 +30,6 @@ import {
   ModalidadType,
   DisponibilidadType,
 } from '../../../../src/types';
-
-let searchTimeout: NodeJS.Timeout;
 
 export default function OportunidadesListScreen() {
   const router = useRouter();
@@ -59,10 +57,20 @@ export default function OportunidadesListScreen() {
   const [tempDisponibilidad, setTempDisponibilidad] = useState<string[]>(filtros.disponibilidad);
   const [tempHabilidades, setTempHabilidades] = useState<string[]>(filtros.habilidades);
 
+  // Per-instance debounce timer, cleared on unmount so we don't fire the
+  // setFiltros update after the screen has been popped.
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, []);
+
   const handleSearchChange = (text: string) => {
     setSearchInput(text);
-    if (searchTimeout) clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
       setFiltros({ busqueda: text.toLowerCase() });
     }, 300);
   };

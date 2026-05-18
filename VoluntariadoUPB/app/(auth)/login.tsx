@@ -14,12 +14,13 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/useAuthStore';
-import { useThemeColors } from '../../src/hooks/useThemeColors';
-import { useGoogleSignIn } from '../../src/hooks/useGoogleSignIn';
+import { useThemeColors } from '../../src/hooks';
 import { ForgotPasswordModal, SuccessNotification } from '../../src/components';
 
-const MAX_EMAIL_LENGTH = 30;
-const MAX_PASSWORD_LENGTH = 30;
+// router is only kept here for the registration navigation.
+
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 max email length
+const MAX_PASSWORD_LENGTH = 128;
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -43,11 +44,13 @@ export default function LoginScreen() {
     setLocalLoading(true);
     try {
       await signIn(email, password);
-      const currentError = useAuthStore.getState().error;
-      if (!currentError) {
-        router.replace('/(drawer)/(tabs)');
-      }
-    } catch (error: any) {
+      // Don't navigate manually — the root layout's onAuthStateChange listener
+      // updates useAuthStore.user, and app/index.tsx redirects accordingly.
+      // Manual router.replace() here used to race the auth listener and
+      // briefly flash stale screens.
+    } catch (err) {
+      // signIn already set a user-friendly error in the store via mapAuthError.
+      if (__DEV__) console.error('Login error:', err);
     } finally {
       setLocalLoading(false);
     }
@@ -160,12 +163,6 @@ export default function LoginScreen() {
               <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
             )}
           </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.subtitle }]}>o</Text>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          </View>
 
           <View style={styles.registerContainer}>
             <Text style={[styles.registerText, { color: colors.subtitle }]}>

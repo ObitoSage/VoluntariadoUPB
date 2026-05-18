@@ -1,40 +1,30 @@
-Plantini chat integration
+﻿Plantini chat integration
 
 This folder implements the Plantini chatbot integration for VoluntariadoUPB.
 
 Notes and configuration
-- The backend base URL is centralized in `src/config/gemini.ts`. It reads, in order of preference:
-	1. `Constants.manifest.extra.GEMINI_BASE_URL` (recommended - add to `app.json` under `expo.extra`)
-	2. `process.env.GEMINI_BASE_URL` (development)
-	3. Fallback to `http://localhost:3000` (not recommended for device testing)
+- The backend base URL is centralized in `src/config/gemini.ts`. Priority order:
+  1. `app.json > expo.extra.GEMINI_BASE_URL`  (hard override — use for production)
+  2. `process.env.GEMINI_BASE_URL`
+  3. Auto-detected from `Constants.expoConfig.hostUri` — Expo already knows your
+     machine's IP to serve the JS bundle; we swap port 8081 for 3000. This makes
+     physical devices and Android emulators work on your local network without ngrok.
+  4. Fallback to `http://localhost:3000` (web browser / iOS Simulator)
 
-	For ngrok testing, set the ngrok https URL in `app.json` like:
+- Chat persistence uses Zustand + AsyncStorage under key `chat_store_v1`.
+  The `chatId` is persisted so conversations survive navigation and app restarts.
+- Image picking uses `expo-image-picker`; attachments are sent as multipart/form-data.
+- Every request includes `Authorization: Bearer <token>` (Supabase JWT). The backend
+  validates it via AuthGuard before processing any message.
 
-	{
-		"expo": {
-			"extra": {
-				"GEMINI_BASE_URL": "https://abcd-12-34-56.ngrok.io"
-			}
-		}
-	}
-
-- Chat persistence uses Zustand + AsyncStorage under key `chat_store_v1`. The `chatId` is persisted so conversations survive navigation and app restarts.
-- The client performs a lightweight client-side scope check to avoid sending out-of-domain queries. Plantini will reply with a short rejection message for out-of-scope prompts; the backend enforces context as well.
-- Image picking uses `expo-image-picker` and attachments are uploaded as multipart/form-data. Current implementation limits quality to reduce size but does not perform heavy compression (can be improved by adding `expo-file-system`/`sharp` on server-side).
-
-Files:
-- `services/chatApi.ts` – wrapper for POST `/gemini/chat-stream` with streaming support (reads base URL from `src/config/gemini.ts`).
-- `store/chatStore.ts` – Zustand store persisted in AsyncStorage
-- `hooks/useChat.ts` – hook exposing sendMessage, cancel, messages. Adds:
-	- chatId persistence into the store
-	- incremental streaming updates using a placeholder message
-	- retry/backoff for transient network errors
-- `components/*` – UI components and Chat screen. `PlantiniHomeCard` is included only in the Home tab. There is a floating button component in `PlantiniFloatingButton.tsx`, but it is not used globally; Plantini must be accessed from Home.
+Files
+- `services/chatApi.ts`    — HTTP wrapper for POST /api/gemini/chat-stream (streaming)
+- `store/chatStore.ts`     — Zustand store persisted in AsyncStorage
+- `hooks/useChat.ts`       — sendMessage, cancel, messages with incremental stream updates
+- `components/`            — UI components; PlantiniHomeCard lives in the Home tab
 
 Testing tips
-- Start your backend or run `ngrok http 3000` and copy the https URL. Put it into `app.json` as explained above. Restart Metro/Expo to pick up `Constants.manifest.extra`.
-- Open the Home tab and tap the Plantini card “Abrir chat”. The chat will reuse/generate a `chatId` and load persisted history.
-- Try asking an out-of-scope question (e.g., "¿Cuál es el clima?") — Plantini should reply with a short refusal without querying the backend.
-
-Security note
-- Do not store or send sensitive personal data to the backend without user consent. If you plan to persist conversations to Firestore, use a separate collection and ensure users opt-in.
+- Start the NestJS backend: `npm run start:dev` inside `gemini-backend/`
+- Make sure your phone/emulator is on the same WiFi as your dev machine.
+- Run `npx expo start` — the backend URL is auto-detected, no manual config needed.
+- Open the Home tab and tap the Plantini card ''Abrir chat''.

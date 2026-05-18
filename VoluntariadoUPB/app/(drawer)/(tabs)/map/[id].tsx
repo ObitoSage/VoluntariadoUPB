@@ -14,11 +14,9 @@ import {
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
-
-import { db } from '../../../../config/firebase';
+import { supabase } from '../../../../config/supabase';
 import { useThemeColors, useUserLocation, useRouteCalculation } from '../../../../src/hooks';
-import { Oportunidad, COLLECTIONS } from '../../../../src/types';
+import { Oportunidad } from '../../../../src/types';
 import { getRegionForCoordinates, openNativeMaps } from '../../../../src/utils/mapHelpers';
 import { formatDistance, formatTravelTime } from '../../../../src/utils/locationUtils';
 
@@ -45,16 +43,42 @@ export default function RutaScreen() {
 
       try {
         setLoading(true);
-        const docRef = doc(db, COLLECTIONS.OPORTUNIDADES, id);
-        const docSnap = await getDoc(docRef);
+        const { data, error: fetchError } = await supabase
+          .from('oportunidades')
+          .select('id, titulo, descripcion, campus, ciudad, ubicacion, status, deadline, categoria, modalidad, horas_semana')
+          .eq('id', id)
+          .maybeSingle();
 
-        if (docSnap.exists()) {
-          const data = { id: docSnap.id, ...docSnap.data() } as Oportunidad;
+        if (fetchError) throw fetchError;
 
-          if (!data.ubicacion?.lat || !data.ubicacion?.lng) {
+        if (data) {
+          const row = data as any;
+          const opp: Oportunidad = {
+            id: row.id,
+            titulo: row.titulo,
+            titleLower: '',
+            descripcion: row.descripcion,
+            organizacion: '',
+            organizacionId: '',
+            campus: row.campus,
+            ciudad: row.ciudad,
+            categoria: row.categoria,
+            modalidad: row.modalidad,
+            horasSemana: row.horas_semana,
+            deadline: row.deadline,
+            cupos: 0,
+            cuposDisponibles: 0,
+            ubicacion: row.ubicacion,
+            habilidades: [],
+            status: row.status,
+            createdAt: '',
+            updatedAt: '',
+            createdBy: '',
+          };
+          if (!opp.ubicacion?.lat || !opp.ubicacion?.lng) {
             setError('Esta oportunidad no tiene ubicación definida');
           } else {
-            setOportunidad(data);
+            setOportunidad(opp);
           }
         } else {
           setError('Oportunidad no encontrada');

@@ -1,7 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
-
-
 export type CategoriaType = 'social' | 'ambiental' | 'educativo' | 'cultural' | 'salud';
 export type ModalidadType = 'presencial' | 'remoto' | 'hibrido';
 export type OportunidadStatusType = 'open' | 'waitlist' | 'closed' | 'finished';
@@ -27,19 +23,20 @@ export interface Oportunidad {
   organizacion: string;
   organizacionId: string;
   cover?: string;
+  coverPath?: string;
   campus: string;
   ciudad: string;
   categoria: CategoriaType;
   modalidad: ModalidadType;
   horasSemana: number;
-  deadline: Timestamp | Date;
+  deadline: string;
   cupos: number;
   cuposDisponibles: number;
   ubicacion?: Ubicacion;
   habilidades: string[];
   status: OportunidadStatusType;
-  createdAt: Timestamp | Date;
-  updatedAt: Timestamp | Date;
+  createdAt: string;
+  updatedAt: string;
   createdBy: string;
 }
 
@@ -50,7 +47,7 @@ export interface OportunidadFormData extends Omit<Oportunidad, 'id' | 'titleLowe
 
 
 export interface User {
-  uid: string;
+  id: string;
   nombre: string;
   email: string;
   role: UserRoleType;
@@ -58,14 +55,15 @@ export interface User {
   telefono?: string;
   intereses: string[];
   avatar?: string;
-  avatarPublicId?: string;
+  avatarPath?: string;
   backgroundImage?: string;
-  backgroundImagePublicId?: string;
+  backgroundImagePath?: string;
   bio?: string;
   carrera?: string;
   semestre?: number;
-  favoritos: string[]; 
-  createdAt: Timestamp | Date;
+  favoritos: string[];
+  monthlyGoal: number;
+  createdAt: string;
 }
 
 export interface UserProfileUpdate {
@@ -77,9 +75,10 @@ export interface UserProfileUpdate {
   telefono?: string;
   intereses?: string[];
   avatar?: string;
-  avatarPublicId?: string;
+  avatarPath?: string;
   backgroundImage?: string;
-  backgroundImagePublicId?: string;
+  backgroundImagePath?: string;
+  monthlyGoal?: number;
 }
 
 
@@ -96,8 +95,8 @@ export interface Postulacion {
   telefono?: string;
   estado: PostulacionEstadoType;
   confirmado: boolean;
-  createdAt: Timestamp | Date;
-  updatedAt: Timestamp | Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PostulacionFormData {

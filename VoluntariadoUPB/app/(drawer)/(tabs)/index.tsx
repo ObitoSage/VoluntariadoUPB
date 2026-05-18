@@ -16,11 +16,8 @@ Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../../src/hooks/useThemeColors';
-import { useUserStats } from '../../../src/hooks/useUserStats';
-import { useUserGoal } from '../../../src/hooks/useUserGoal';
-import { GoalModal } from '../../../src/components/GoalModal';
-import { useVoluntariadoStore } from '../../../src/store/voluntariadoStore';
+import { useThemeColors, useUserStats, useUserGoal } from '../../../src/hooks';
+import { GoalModal } from '../../../src/components';
 import type { ThemeColors } from '../../theme/colors';
 import { PlantiniHomeCard } from '../../../src/features/chat/components/PlantiniHomeCard';
 

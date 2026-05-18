@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks';
 
 export const PlantiniHomeCard: React.FC = () => {
   const { colors } = useThemeColors();

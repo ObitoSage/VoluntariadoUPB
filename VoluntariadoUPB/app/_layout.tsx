@@ -1,11 +1,14 @@
 import 'react-native-get-random-values';
 import React, { useEffect } from 'react';
-import { Stack, Slot } from 'expo-router';
+import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../src/store/useAuthStore';
-import { useNotifications } from '../src/hooks/useNotifications';
+import { useNotifications } from '../src/hooks';
+import { supabase } from '../config/supabase';
 import * as Notifications from 'expo-notifications';
 
-// 🔔 Configurar el handler de notificaciones
+// Configure foreground notification behaviour once at module level.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -16,36 +19,39 @@ Notifications.setNotificationHandler({
   }),
 });
 
+const RootStack = () => (
+  <Stack screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="index" />
+    <Stack.Screen name="(auth)" />
+    <Stack.Screen name="(drawer)" />
+    <Stack.Screen name="onboarding" />
+  </Stack>
+);
+
 export default function RootLayout() {
-  const { isLoading } = useAuthStore();
-  
-  // 🚀 INICIALIZAR SISTEMA DE NOTIFICACIONES
+  const setUser = useAuthStore((s) => s.setUser);
+
   useNotifications();
-  
+
   useEffect(() => {
-    console.log('🚀 App iniciada - Sistema de notificaciones activo');
-  }, []);
-  
-  if (isLoading) {
-    // Retornar el Stack vacío para que la navegación funcione
-    return (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(drawer)" />
-        <Slot />
-      </Stack>
-    );
-  }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setUser]);
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(drawer)" />
-        <Slot />
-      </Stack>
-    </>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <RootStack />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

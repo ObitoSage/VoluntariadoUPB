@@ -1,3 +1,6 @@
+// Ensures Express.Multer namespace augmentation is loaded by TypeScript
+import 'multer';
+
 import { BadRequestException, Logger } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import sharp from 'sharp';
@@ -28,10 +31,14 @@ const logger = new Logger('GeminiUploadFile');
 
 const resolveMimeType = (file: Express.Multer.File) => {
   const fileExtension = file.originalname.split('.').pop() ?? '';
-  const fallbackMimeType = fileMimeTypesByExtension[fileExtension.toLowerCase()] ?? '';
+  const fallbackMimeType =
+    fileMimeTypesByExtension[fileExtension.toLowerCase()] ?? '';
   const providedMimeType = file.mimetype;
 
-  if (providedMimeType && !providedMimeType.includes('application/octet-stream')) {
+  if (
+    providedMimeType &&
+    !providedMimeType.includes('application/octet-stream')
+  ) {
     return providedMimeType;
   }
 
@@ -47,12 +54,17 @@ const ensureFileIsAllowed = (
   maxFileSizeBytes: number,
 ) => {
   if (file.size > maxFileSizeBytes) {
-    throw new BadRequestException('El archivo excede el tamaño máximo permitido');
+    throw new BadRequestException(
+      'El archivo excede el tamaño máximo permitido',
+    );
   }
 
   const mimeType = resolveMimeType(file);
 
-  if (!mimeType || (!mimeType.startsWith('image/') && !allowedMimeTypes.has(mimeType))) {
+  if (
+    !mimeType ||
+    (!mimeType.startsWith('image/') && !allowedMimeTypes.has(mimeType))
+  ) {
     throw new BadRequestException('Tipo de archivo no soportado');
   }
 
@@ -64,7 +76,8 @@ export const geminiUploadFiles = async (
   files: Express.Multer.File[],
   options: UploadFileOptions = {},
 ) => {
-  const { transformToPng, maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE_BYTES } = options;
+  const { transformToPng, maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE_BYTES } =
+    options;
 
   if (!files?.length) {
     return [];
@@ -84,7 +97,9 @@ export const geminiUploadFiles = async (
             }),
           });
         } catch (error) {
-          logger.warn(`No se pudo procesar el archivo para transformarlo a PNG: ${file.originalname}`);
+          logger.warn(
+            `No se pudo procesar el archivo para transformarlo a PNG: ${file.originalname}`,
+          );
           throw new BadRequestException(
             'No se pudo procesar la imagen, verifica que el archivo sea válido',
           );

@@ -1,6 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import {
   ContentListUnion,
   createPartFromUri,
@@ -9,40 +6,18 @@ import {
 } from '@google/genai';
 import { v4 as uuidV4 } from 'uuid';
 import { InternalServerErrorException, Logger } from '@nestjs/common';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 import { geminiUploadFiles } from '../helpers/gemini-upload-file';
 import { ImageGenerationDto } from '../dtos/image-generation.dto';
 
-const AI_IMAGES_PATH = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'public/ai-images',
-);
+const AI_IMAGES_BUCKET = 'ai-images';
 
 const logger = new Logger('ImageGenerationUseCase');
 
-const ensureAiImagesDirectory = () => {
-  try {
-    if (!fs.existsSync(AI_IMAGES_PATH)) {
-      fs.mkdirSync(AI_IMAGES_PATH, { recursive: true });
-    }
-  } catch (error) {
-    logger.error(
-      'No se pudo crear el directorio para las imágenes generadas',
-      error instanceof Error ? error.stack : String(error),
-    );
-    throw new InternalServerErrorException('No se pudo preparar el almacenamiento de imágenes');
-  }
-};
-
-ensureAiImagesDirectory();
-
 interface Options {
   model?: string;
-  systemInstruction?: string;
-  baseUrl?: string;
+  supabase: SupabaseClient;
 }
 
 export interface ImageGenerationResponse {
@@ -53,7 +28,7 @@ export interface ImageGenerationResponse {
 export const imageGenerationUseCase = async (
   ai: GoogleGenAI,
   imageGenerationDto: ImageGenerationDto,
-  options?: Options,
+  options: Options,
 ): Promise<ImageGenerationResponse> => {
   const { prompt, files = [] } = imageGenerationDto;
   const contents: ContentListUnion = [{ text: prompt }];
@@ -66,7 +41,7 @@ export const imageGenerationUseCase = async (
     contents.push(createPartFromUri(file.uri ?? '', file.mimeType ?? ''));
   });
 
-  const { model = 'gemini-2.0-flash-exp-image-generation', baseUrl } = options ?? {};
+  const { model = 'gemini-2.0-flash-exp-image-generation', supabase } = options;
 
   const response = await ai.models.generateContent({
     model: model,
@@ -78,7 +53,6 @@ export const imageGenerationUseCase = async (
 
   let imageUrl = '';
   let text = '';
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const imageId = uuidV4();
 
   for (const part of response.candidates?.[0]?.content?.parts ?? []) {
@@ -92,28 +66,31 @@ export const imageGenerationUseCase = async (
 
     const imageData = part.inlineData.data!;
     const buffer = Buffer.from(imageData, 'base64');
-    const imagePath = path.join(AI_IMAGES_PATH, `${imageId}.png`);
+    const fileName = `${imageId}.png`;
 
-    try {
-      fs.writeFileSync(imagePath, buffer);
-    } catch (error) {
+    const { error: uploadError } = await supabase.storage
+      .from(AI_IMAGES_BUCKET)
+      .upload(fileName, buffer, {
+        contentType: 'image/png',
+        upsert: false,
+      });
+
+    if (uploadError) {
       logger.error(
-        'No se pudo guardar la imagen generada',
-        error instanceof Error ? error.stack : String(error),
+        'No se pudo subir la imagen generada a Supabase Storage',
+        uploadError.message,
       );
-      throw new InternalServerErrorException('No se pudo guardar la imagen generada');
+      throw new InternalServerErrorException(
+        'No se pudo guardar la imagen generada',
+      );
     }
 
-    const apiUrl = baseUrl ?? process.env.API_URL;
-    if (!apiUrl) {
-      logger.warn('API_URL no está configurado; no se puede generar la URL pública de la imagen');
-    } else {
-      imageUrl = `${apiUrl}/ai-images/${imageId}.png`;
-    }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(AI_IMAGES_BUCKET).getPublicUrl(fileName);
+
+    imageUrl = publicUrl;
   }
 
-  return {
-    imageUrl: imageUrl,
-    text: text,
-  };
+  return { imageUrl, text };
 };

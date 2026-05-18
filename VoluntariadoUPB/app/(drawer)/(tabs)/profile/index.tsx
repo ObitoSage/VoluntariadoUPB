@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
+import {
+  useThemeColors,
+  useUserProfile,
+  usePostulaciones,
+  useFavoriteOportunidades,
+} from '../../../../src/hooks';
 import type { ThemeColors } from '../../../theme/colors';
-import { useUserProfile } from '../../../../src/hooks/useUserProfile';
-import { usePostulaciones } from '../../../../src/hooks/usePostulaciones';
-import { useFavoriteOportunidades } from '../../../../src/hooks/useFavoriteOportunidades';
 
 // Componentes modulares
-import { 
+import {
   ProfileHeaderWithBackground,
-  ProfileStats, 
+  ProfileStats,
   ActivitySection,
   FavoritesSection,
   ProfileEditModal,
   AchievementModal,
-  type Achievement 
-} from '../../../../src/components/Profile';
+  type Achievement
+} from '../../../../src/components/profile';
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({

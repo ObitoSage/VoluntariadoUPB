@@ -1,88 +1,70 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Content } from '@google/genai';
-import { promises as fs } from 'node:fs';
-import * as path from 'node:path';
+import { SupabaseService } from '../../supabase/supabase.service';
 
-const CHAT_STORAGE_PATH = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'storage',
-  'chats',
-);
+// Minimal row shape — avoids dependency on generated Supabase types while
+// keeping type safety for what we actually read/write.
+interface ChatHistoryRow {
+  chat_id: string;
+  messages: Content[];
+  updated_at: string;
+}
 
+/**
+ * Persists chat histories in Supabase PostgreSQL.
+ *
+ * Required table (run in Supabase SQL editor):
+ *   See sql/schema.sql → chat_histories
+ */
 @Injectable()
 export class ChatHistoryRepository {
   private readonly logger = new Logger(ChatHistoryRepository.name);
 
-  constructor() {
-    void this.ensureStorageDirectory();
-  }
-
-  private async ensureStorageDirectory() {
-    try {
-      await fs.mkdir(CHAT_STORAGE_PATH, { recursive: true });
-    } catch (error) {
-      this.logger.error(
-        'No se pudo crear el directorio para el historial de chats',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-  }
-
-  private getChatFilePath(chatId: string) {
-    return path.join(CHAT_STORAGE_PATH, `${chatId}.json`);
-  }
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   async findByChatId(chatId: string): Promise<Content[]> {
-    const filePath = this.getChatFilePath(chatId);
+    const { data, error } = (await this.supabaseService.client
+      .from('chat_histories')
+      .select('messages')
+      .eq('chat_id', chatId)
+      .maybeSingle()) as { data: Pick<ChatHistoryRow, 'messages'> | null; error: Error | null };
 
-    try {
-      const data = await fs.readFile(filePath, 'utf8');
-      const messages = JSON.parse(data) as Content[];
-      return Array.isArray(messages) ? messages : [];
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return [];
-      }
-
-      this.logger.error(
-        `No se pudo leer el historial del chat ${chatId}`,
-        error instanceof Error ? error.stack : String(error),
-      );
+    if (error) {
+      this.logger.error(`Error loading chat history for ${chatId}`, error.message);
       throw error;
     }
+
+    return data?.messages ?? [];
   }
 
   async save(chatId: string, messages: Content[]): Promise<void> {
-    const filePath = this.getChatFilePath(chatId);
+    const row: ChatHistoryRow = {
+      chat_id: chatId,
+      messages,
+      updated_at: new Date().toISOString(),
+    };
 
-    try {
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-      await fs.writeFile(filePath, JSON.stringify(messages, null, 2), 'utf8');
-    } catch (error) {
-      this.logger.error(
-        `No se pudo guardar el historial del chat ${chatId}`,
-        error instanceof Error ? error.stack : String(error),
-      );
+    const { error } = await (this.supabaseService.client
+      .from('chat_histories')
+      .upsert(row as never, { onConflict: 'chat_id' }) as unknown as Promise<{
+      error: Error | null;
+    }>);
+
+    if (error) {
+      this.logger.error(`Error saving chat history for ${chatId}`, error.message);
       throw error;
     }
   }
 
   async clear(chatId: string): Promise<void> {
-    const filePath = this.getChatFilePath(chatId);
+    const { error } = await (this.supabaseService.client
+      .from('chat_histories')
+      .delete()
+      .eq('chat_id', chatId) as unknown as Promise<{ error: Error | null }>);
 
-    try {
-      await fs.unlink(filePath);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        this.logger.error(
-          `No se pudo eliminar el historial del chat ${chatId}`,
-          error instanceof Error ? error.stack : String(error),
-        );
-        throw error;
-      }
+    if (error) {
+      this.logger.error(`Error clearing chat history for ${chatId}`, error.message);
+      throw error;
     }
   }
 }

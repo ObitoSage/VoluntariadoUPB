@@ -11,31 +11,34 @@ import {
   Post,
   Res,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { Response } from 'express';
 
+// Ensures Express.Multer namespace augmentation is loaded by TypeScript
+import 'multer';
+
 import { GeminiService } from './gemini.service';
 import { BasicPromptDto } from './dtos/basic-prompt.dto';
 import { ChatPromptDto } from './dtos/chat-prompt.dto';
 import { GenerateContentResponse } from '@google/genai';
 import { ImageGenerationDto } from './dtos/image-generation.dto';
-import { PokemonHelperDto } from './dtos/pokemon-helper.dto';
-import { TriviaQuestionDto } from './dtos/trivia-question.dto';
+import { AuthGuard } from '../auth/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('gemini')
 export class GeminiController {
   private readonly logger = new Logger(GeminiController.name);
 
   constructor(private readonly geminiService: GeminiService) {}
 
-  async outputStreamResponse(
+  private async outputStreamResponse(
     res: Response,
     stream: AsyncGenerator<GenerateContentResponse, any, any>,
   ) {
-    // res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Type', 'text/plain');
     res.status(HttpStatus.OK);
 
@@ -50,7 +53,11 @@ export class GeminiController {
       res.end();
       return resultText;
     } catch (error) {
-      this.handleStreamError(res, error, 'No se pudo completar la respuesta en streaming');
+      this.handleStreamError(
+        res,
+        error,
+        'No se pudo completar la respuesta en streaming',
+      );
       return resultText;
     }
   }
@@ -77,7 +84,11 @@ export class GeminiController {
       const stream = await this.geminiService.basicPromptStream(basicPromptDto);
       await this.outputStreamResponse(res, stream);
     } catch (error) {
-      this.handleStreamError(res, error, 'No se pudo generar la respuesta en streaming');
+      this.handleStreamError(
+        res,
+        error,
+        'No se pudo generar la respuesta en streaming',
+      );
     }
   }
 
@@ -94,19 +105,17 @@ export class GeminiController {
       const stream = await this.geminiService.chatStream(chatPromptDto);
       const data = await this.outputStreamResponse(res, stream);
 
-      const geminiMessage = {
-        role: 'model',
-        parts: [{ text: data }],
-      };
-      const userMessage = {
-        role: 'user',
-        parts: [{ text: chatPromptDto.prompt }],
-      };
-
-      await this.geminiService.saveMessage(chatPromptDto.chatId, userMessage);
-      await this.geminiService.saveMessage(chatPromptDto.chatId, geminiMessage);
+      // Save both messages in a single Supabase write
+      await this.geminiService.saveMessages(chatPromptDto.chatId, [
+        { role: 'user', parts: [{ text: chatPromptDto.prompt }] },
+        { role: 'model', parts: [{ text: data }] },
+      ]);
     } catch (error) {
-      this.handleStreamError(res, error, 'No se pudo completar el chat en streaming');
+      this.handleStreamError(
+        res,
+        error,
+        'No se pudo completar el chat en streaming',
+      );
     }
   }
 
@@ -124,10 +133,7 @@ export class GeminiController {
   async clearChatHistory(@Param('chatId') chatId: string) {
     try {
       await this.geminiService.clearChatHistory(chatId);
-      return {
-        chatId,
-        cleared: true,
-      };
+      return { chatId, cleared: true };
     } catch (error) {
       this.handleError(error, 'No se pudo limpiar el historial del chat');
     }
@@ -142,39 +148,19 @@ export class GeminiController {
     imageGenerationDto.files = files;
 
     try {
-      const { imageUrl, text } = await this.geminiService.imageGeneration(
-        imageGenerationDto,
-      );
-
-      return {
-        imageUrl,
-        text,
-      };
+      const { imageUrl, text } =
+        await this.geminiService.imageGeneration(imageGenerationDto);
+      return { imageUrl, text };
     } catch (error) {
       this.handleError(error, 'No se pudo generar la imagen');
     }
   }
 
-  @Post('pokemon-helper')
-  async getPokemonHelp(@Body() pokemonHelperDto: PokemonHelperDto) {
-    try {
-      return await this.geminiService.getPokemonHelp(pokemonHelperDto);
-    } catch (error) {
-      this.handleError(error, 'No se pudo obtener la ayuda de Pokémon');
-    }
-  }
-
-  @Get('trivia/question/:topic')
-  async getTriviaQuestion(@Param() triviaQuestionDto: TriviaQuestionDto) {
-    try {
-      return await this.geminiService.getTriviaQuestion(triviaQuestionDto);
-    } catch (error) {
-      this.handleError(error, 'No se pudo obtener la pregunta de trivia');
-    }
-  }
-
   private handleError(error: unknown, message: string): never {
-    this.logger.error(message, error instanceof Error ? error.stack : String(error));
+    this.logger.error(
+      message,
+      error instanceof Error ? error.stack : String(error),
+    );
 
     if (error instanceof HttpException) {
       throw error;
@@ -184,15 +170,24 @@ export class GeminiController {
   }
 
   private handleStreamError(res: Response, error: unknown, message: string) {
-    this.logger.error(message, error instanceof Error ? error.stack : String(error));
+    this.logger.error(
+      message,
+      error instanceof Error ? error.stack : String(error),
+    );
 
     if (res.writableEnded) {
       return;
     }
 
     if (!res.headersSent) {
-      const status = error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-      res.status(status).json({ message, error: error instanceof Error ? error.message : String(error) });
+      const status =
+        error instanceof HttpException
+          ? error.getStatus()
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+      res.status(status).json({
+        message,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return;
     }
 

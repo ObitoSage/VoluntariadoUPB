@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Image, StyleSheet, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../../../src/hooks';
 
 export const PlantiniFloatingButton: React.FC = () => {
   const router = useRouter();

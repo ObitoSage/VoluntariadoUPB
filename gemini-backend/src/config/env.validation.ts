@@ -13,7 +13,15 @@ class EnvironmentVariables {
   GEMINI_API_KEY!: string;
 
   @IsUrl({ require_tld: false })
-  API_URL!: string;
+  @IsOptional()
+  API_URL?: string;
+
+  @IsUrl({ require_tld: false })
+  SUPABASE_URL!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  SUPABASE_SERVICE_ROLE_KEY!: string;
 
   @IsOptional()
   @IsString()

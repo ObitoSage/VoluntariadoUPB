@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\caezu\\\\Desktop\\\\github\\\\VoluntariadoUPB\\\\VoluntariadoUPB\\\\src\\\\components\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Skill(supabase-postgres-best-practices)",
+      "Skill(vercel-react-native-skills)",
+      "Bash(xargs ls -la)",
+      "Bash(npx tsc *)",
+      "Bash(tee /tmp/tsc-output.txt)",
+      "PowerShell(Out-File *)",
+      "PowerShell($loc = Get-Location; Write-Output $loc.Path; Test-Path \"VoluntariadoUPB\\\\package.json\")",
+      "PowerShell($result = npx tsc --noEmit 2>&1; $exitCode = $LASTEXITCODE; Write-Output \"EXIT_CODE=$exitCode\"; Write-Output \"RESULT_LINES=$\\($result.Count\\)\"; $result | Select-Object -First 100)"
+    ]
+  }
+}

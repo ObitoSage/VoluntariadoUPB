@@ -1,46 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { SplashScreen } from '../src/components';
 
-let hasShownSplash = false;
+const ONBOARDING_FLAG_KEY = '@voluntariado/onboarding_completed';
 
 export default function HomeRedirect() {
-  const { user, isLoading, error } = useAuthStore();
-  const [checking, setChecking] = useState(true);
-  const [showSplash, setShowSplash] = useState(!hasShownSplash);
+  const { user, isLoading } = useAuthStore();
+  const [showSplash, setShowSplash] = useState(true);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setChecking(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    AsyncStorage.getItem(ONBOARDING_FLAG_KEY).then((value) => {
+      setHasSeenOnboarding(value === 'true');
+      setOnboardingChecked(true);
+    });
   }, []);
 
-  const handleSplashFinish = () => {
-    hasShownSplash = true;
-    setShowSplash(false);
-  };
-
   if (showSplash) {
-    return <SplashScreen onFinish={handleSplashFinish} />;
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
-  if ((isLoading || checking) && !error) {
+  if (isLoading || !onboardingChecked) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#fff',
+        }}
+      >
         <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
-  if (!user) {
-    return <Redirect href="/onboarding" />;
-  }
 
   if (user) {
     return <Redirect href="/(drawer)/(tabs)" />;
+  }
+
+  if (!hasSeenOnboarding) {
+    return <Redirect href="/onboarding" />;
   }
 
   return <Redirect href="/(auth)/login" />;

@@ -13,12 +13,8 @@ Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../../../src/hooks/useThemeColors';
-import { usePostulaciones, Postulacion } from '../../../../src/hooks/usePostulaciones';
-import { useRolePermissions } from '../../../../src/hooks/useRolePermissions';
-import { PostulacionDetailModal } from '../../../../src/components/PostulacionDetailModal';
-import { AdminPostulacionModal } from '../../../../src/components/AdminPostulacionModal';
-import { PostulacionCard } from '../../../../src/components/PostulacionCard';
+import { useThemeColors, useRolePermissions, usePostulaciones, type PostulacionItem } from '../../../../src/hooks';
+import { OportunidadDetailModal, AdminPostulacionModal, PostulacionCard } from '../../../../src/components';
 import type { ThemeColors } from '../../../theme/colors';
 
 const createStyles = (colors: ThemeColors) =>
@@ -291,102 +287,60 @@ StyleSheet.create({
 });
 
 export default function ApplicationsScreen() {
-const { colors } = useThemeColors();
-const { canViewAllApplications } = useRolePermissions();
-const styles = React.useMemo(() => createStyles(colors), [colors]);
-const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'waitlisted'>('all');
-const [selectedPostulacion, setSelectedPostulacion] = useState<Postulacion | null>(null);
-const [modalVisible, setModalVisible] = useState(false);
+  const { colors } = useThemeColors();
+  const { canViewAllApplications } = useRolePermissions();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const isAdminView = canViewAllApplications();
 
-const { postulaciones, loading, refreshing, refresh, updatePostulacionStatus } = usePostulaciones();
+  // Status filter — keyed by DB values.
+  // 'pending' is a UI alias covering both 'submitted' and 'under_review'.
+  type FilterKey = 'all' | 'pending' | 'accepted' | 'rejected' | 'waitlisted';
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [selectedPostulacion, setSelectedPostulacion] = useState<PostulacionItem | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-const handleVerDetalles = (oportunidadId: string) => {
-    // Open the opportunity detail modal (non-admin users)
-    setSelectedPostulacion({} as Postulacion); // placeholder to drive modal lifecycle
-    // store the opportunity id inside selectedPostulacion.id so PostulacionDetailModal can use it
-    setSelectedPostulacion({ id: oportunidadId } as unknown as Postulacion);
-    setModalVisible(true);
-};
+  const { postulaciones, loading, refreshing, refresh, updatePostulacionStatus } = usePostulaciones();
 
-const handleAdministrar = (postulacion: Postulacion) => {
+  const isPending = (s: string) => s === 'submitted' || s === 'under_review';
+
+  const filters: { key: FilterKey; title: string; count: number }[] = useMemo(() => [
+    { key: 'all',        title: 'Todas',          count: postulaciones.length },
+    { key: 'pending',    title: 'Pendientes',      count: postulaciones.filter(a => isPending(a.status)).length },
+    { key: 'accepted',   title: 'Aceptadas',       count: postulaciones.filter(a => a.status === 'accepted').length },
+    { key: 'rejected',   title: 'Rechazadas',      count: postulaciones.filter(a => a.status === 'rejected').length },
+    { key: 'waitlisted', title: 'Lista de espera', count: postulaciones.filter(a => a.status === 'waitlisted').length },
+  ], [postulaciones]);
+
+  const filteredApplications = useMemo(() => {
+    if (activeFilter === 'all') return postulaciones;
+    if (activeFilter === 'pending') return postulaciones.filter(a => isPending(a.status));
+    return postulaciones.filter(a => a.status === activeFilter);
+  }, [activeFilter, postulaciones]);
+
+  const openModal = (postulacion: PostulacionItem) => {
     setSelectedPostulacion(postulacion);
     setModalVisible(true);
-};
+  };
 
-const handleCloseModal = () => {
+  const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedPostulacion(null);
-};
+  };
 
-const filters = useMemo(() => [
-    { key: 'all', title: 'Todas', count: postulaciones.length },
-    { key: 'pending', title: 'Pendientes', count: postulaciones.filter(a => a.status === 'pending').length },
-    { key: 'accepted', title: 'Aceptadas', count: postulaciones.filter(a => a.status === 'accepted').length },
-    { key: 'rejected', title: 'Rechazadas', count: postulaciones.filter(a => a.status === 'rejected').length },
-    { key: 'waitlisted', title: 'Lista de espera', count: postulaciones.filter(a => a.status === 'waitlisted').length },
-], [postulaciones]);
-
-const filteredApplications = useMemo(() => 
-    activeFilter === 'all' 
-        ? postulaciones 
-        : postulaciones.filter(app => app.status === activeFilter),
-    [activeFilter, postulaciones]
-);
-
-const getStatusBadgeStyle = (status: string) => {
-    switch (status) {
-    case 'pending': return styles.statusBadgePending;
-    case 'accepted': return styles.statusBadgeAccepted;
-    case 'rejected': return styles.statusBadgeRejected;
-    case 'waitlisted': return styles.statusBadgeWaitlisted;
-    default: return styles.statusBadgePending;
-    }
-};
-
-const getStatusTextStyle = (status: string) => {
-    switch (status) {
-    case 'pending': return styles.statusTextPending;
-    case 'accepted': return styles.statusTextAccepted;
-    case 'rejected': return styles.statusTextRejected;
-    case 'waitlisted': return styles.statusTextWaitlisted;
-    default: return styles.statusTextPending;
-    }
-};
-
-const getStatusLabel = (status: string) => {
-    switch (status) {
-    case 'pending': return 'Pendiente';
-    case 'accepted': return 'Aceptada';
-    case 'rejected': return 'Rechazada';
-    case 'waitlisted': return 'En lista de espera';
-    default: return 'Pendiente';
-    }
-};
-
-const renderApplicationCard = ({ item, index }: { item: any; index: number }) => {
-    const isAdminView = canViewAllApplications();
-
+  const renderApplicationCard = ({ item, index }: { item: PostulacionItem; index: number }) => {
     const handleApprove = async () => {
-      if (!item.id) return;
-      const success = await updatePostulacionStatus(item.id, 'accepted');
-      if (success) {
-        Alert.alert('✅ Aprobado', 'La postulación ha sido aprobada exitosamente');
-      }
+      const ok = await updatePostulacionStatus(item.id, 'accepted');
+      if (ok) Alert.alert('✅ Aprobado', 'La postulación ha sido aprobada exitosamente');
     };
-
     const handleReject = async () => {
-      if (!item.id) return;
-      const success = await updatePostulacionStatus(item.id, 'rejected');
-      if (success) {
-        Alert.alert('❌ Rechazado', 'La postulación ha sido rechazada');
-      }
+      const ok = await updatePostulacionStatus(item.id, 'rejected');
+      if (ok) Alert.alert('❌ Rechazado', 'La postulación ha sido rechazada');
     };
-
     return (
       <PostulacionCard
         item={item}
         index={index}
-        onPress={() => isAdminView ? handleAdministrar(item) : handleVerDetalles(item.oportunidadId)}
+        onPress={() => openModal(item)}
         isAdminView={isAdminView}
         enableSwipe={isAdminView}
         onApprove={handleApprove}
@@ -395,110 +349,95 @@ const renderApplicationCard = ({ item, index }: { item: any; index: number }) =>
     );
   };
 
-const renderEmptyState = () => (
+  const renderEmptyState = () => (
     <View style={styles.emptyState}>
-    <View style={styles.emptyIconContainer}>
+      <View style={styles.emptyIconContainer}>
         <Ionicons name="document-text-outline" size={48} color={colors.primary} style={styles.emptyIcon} />
+      </View>
+      <Text style={styles.emptyTitle}>No hay postulaciones</Text>
+      <Text style={styles.emptyDescription}>
+        {isAdminView
+          ? 'No hay postulaciones registradas aún.'
+          : 'Aún no has aplicado a ningún voluntariado.\nExplora las oportunidades disponibles.'}
+      </Text>
     </View>
-    <Text style={styles.emptyTitle}>No hay postulaciones</Text>
-    <Text style={styles.emptyDescription}>
-        Aún no has aplicado a ningún voluntariado.{'\n'}
-        Explora las oportunidades disponibles y comienza a hacer la diferencia.
-    </Text>
-    </View>
-);
+  );
 
-return (
+  return (
     <View style={styles.container}>
-    <Stack.Screen options={{ title: 'Mis Postulaciones' }} />
-    
-      {/* Header Section */}
-    <View style={styles.headerSection}>
+      <Stack.Screen options={{ title: isAdminView ? 'Gestión de Postulaciones' : 'Mis Postulaciones' }} />
+
+      {/* Header */}
+      <View style={styles.headerSection}>
         <Text style={styles.headerTitle}>
-          {canViewAllApplications() ? 'Gestión de Postulaciones' : 'Mis Postulaciones'}
+          {isAdminView ? 'Gestión de Postulaciones' : 'Mis Postulaciones'}
         </Text>
         <Text style={styles.headerSubtitle}>
-          {canViewAllApplications() 
-            ? 'Administra todas las postulaciones de los estudiantes a las oportunidades de voluntariado.'
-            : 'Mantén un seguimiento de todas tus aplicaciones a voluntariados y su estado actual.'}
+          {isAdminView
+            ? 'Administra todas las postulaciones de los estudiantes.'
+            : 'Seguimiento de tus aplicaciones y su estado actual.'}
         </Text>
-    </View>
+      </View>
 
-      {/* Filters Section */}
-    <View style={styles.filtersSection}>
+      {/* Filters */}
+      <View style={styles.filtersSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersContainer}>
-        {filters.map((filter) => (
+          {filters.map((filter) => (
             <TouchableOpacity
-            key={filter.key}
-            style={[
-                styles.filterChip,
-                activeFilter === filter.key && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter(filter.key as any)}
+              key={filter.key}
+              style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
+              onPress={() => setActiveFilter(filter.key)}
             >
-            <Text style={[
-                styles.filterText,
-                activeFilter === filter.key && styles.filterTextActive,
-            ]}>
+              <Text style={[styles.filterText, activeFilter === filter.key && styles.filterTextActive]}>
                 {filter.title} ({filter.count})
-            </Text>
+              </Text>
             </TouchableOpacity>
-        ))}
+          ))}
         </ScrollView>
-    </View>
+      </View>
 
-      {/* Applications List */}
-    {loading && postulaciones.length === 0 ? (
+      {/* List */}
+      {loading && postulaciones.length === 0 ? (
         <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.subtitle }]}>
-            Cargando postulaciones...
-        </Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.subtitle }]}>Cargando postulaciones...</Text>
         </View>
-    ) : filteredApplications.length > 0 ? (
+      ) : filteredApplications.length > 0 ? (
         <FlatList
-        data={filteredApplications}
-        renderItem={renderApplicationCard}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        style={styles.applicationsList}
-        refreshControl={
-            <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refresh}
-            tintColor={colors.primary}
-            />
-        }
+          data={filteredApplications}
+          renderItem={renderApplicationCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          style={styles.applicationsList}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
+          }
         />
-    ) : (
+      ) : (
         <View style={styles.applicationsSection}>
-        {renderEmptyState()}
+          {renderEmptyState()}
         </View>
-    )}
+      )}
 
-      {/* Modal de Detalles */}
-        {/* Modal de Detalles / Administración */}
-        {canViewAllApplications() ? (
-            <AdminPostulacionModal
-                visible={modalVisible}
-                postulacion={selectedPostulacion}
-                onClose={handleCloseModal}
-                onUpdateStatus={async (id: string, status: 'accepted' | 'rejected' | 'pending' | 'waitlisted') => {
-                    const ok = await updatePostulacionStatus(id, status);
-                    if (ok) {
-                        refresh();
-                        handleCloseModal();
-                    }
-                }}
-            />
-        ) : (
-            <PostulacionDetailModal
-                visible={modalVisible}
-                oportunidadId={selectedPostulacion ? selectedPostulacion.id : null}
-                onClose={handleCloseModal}
-            />
-        )}
+      {/* Modals */}
+      {isAdminView ? (
+        <AdminPostulacionModal
+          visible={modalVisible}
+          postulacion={selectedPostulacion}
+          onClose={handleCloseModal}
+          onUpdateStatus={async (id, status) => {
+            const ok = await updatePostulacionStatus(id, status);
+            if (ok) { refresh(); handleCloseModal(); }
+          }}
+        />
+      ) : (
+        <OportunidadDetailModal
+          visible={modalVisible}
+          oportunidadId={selectedPostulacion?.oportunidadId ?? null}
+          onClose={handleCloseModal}
+        />
+      )}
     </View>
-);
+  );
 }

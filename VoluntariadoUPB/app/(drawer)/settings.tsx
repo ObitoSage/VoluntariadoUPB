@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Switch, Text, View, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeColors } from '../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../src/hooks';
 import { useThemeStore } from '../../src/store/useThemeStore';
 import { useNotifications } from '../../src/hooks';
 import { useAuthStore } from '../../src/store/useAuthStore';

@@ -24,7 +24,20 @@ async function bootstrap() {
       credentials: true,
     });
   } else {
-    app.enableCors();
+    // Default to localhost-only origins when CORS_ORIGINS is not configured.
+    // Never use app.enableCors() with no args — that allows ALL origins.
+    logger.warn(
+      'CORS_ORIGINS is not set. Restricting to localhost origins only. ' +
+        'Set CORS_ORIGINS in production.',
+    );
+    app.enableCors({
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:8081',
+        'http://localhost:19006',
+      ],
+      credentials: true,
+    });
   }
 
   app.setGlobalPrefix('api');

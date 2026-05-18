@@ -1,26 +1,23 @@
 import React from 'react';
-import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-import { useThemeColors } from '../../../src/hooks/useThemeColors';
+import { useThemeColors } from '../../../src/hooks';
 
 const TabsLayout = () => {
   const { colors } = useThemeColors();
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.muted,
-          tabBarStyle: {
-            backgroundColor: colors.tabBarBackground,
-            borderTopColor: colors.border,
-          },
-        }}
-      >
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: {
+          backgroundColor: colors.tabBarBackground,
+          borderTopColor: colors.border,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -71,7 +68,6 @@ const TabsLayout = () => {
         }}
       />
       </Tabs>
-    </View>
   );
 };
 

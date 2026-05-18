@@ -1,8 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
-import { collection, query, where, onSnapshot, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { supabase } from '../../config/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Nombre de la tarea en background
@@ -60,56 +59,59 @@ export class NotificationScheduler {
   }
 
   /**
-   * Configura listeners en tiempo real para cambios en Firestore
+   * Configura listeners en tiempo real para cambios en Supabase Realtime
    */
   private async setupRealtimeListeners() {
     if (!this.userId) return;
 
-    // Listener para cambios en postulaciones
-    const postulacionesQuery = query(
-      collection(db, 'postulaciones'),
-      where('usuarioId', '==', this.userId)
-    );
+    // Listener for postulacion status changes
+    const unsubPostulaciones = supabase
+      .channel(`scheduler-postulaciones-${this.userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'postulaciones',
+          filter: `estudiante_id=eq.${this.userId}`,
+        },
+        async (payload) => {
+          const data = payload.new as { id: string; oportunidad_id: string; estado: string };
+          const prevStatus = await this.getStoredPostulacionStatus(data.id);
 
-    const unsubPostulaciones = onSnapshot(postulacionesQuery, async (snapshot) => {
-      for (const change of snapshot.docChanges()) {
-        if (change.type === 'modified') {
-          const data = change.doc.data();
-          const prevStatus = await this.getStoredPostulacionStatus(change.doc.id);
-          
-          if (prevStatus && prevStatus !== data.status) {
+          if (prevStatus && prevStatus !== data.estado) {
             await this.notifyPostulacionStatusChange(
-              change.doc.id,
-              data.oportunidadId,
-              data.status,
+              data.id,
+              data.oportunidad_id,
+              data.estado,
               prevStatus
             );
           }
-          
-          await this.storePostulacionStatus(change.doc.id, data.status);
+          await this.storePostulacionStatus(data.id, data.estado);
         }
-      }
-    });
+      )
+      .subscribe();
 
-    this.unsubscribers.push(unsubPostulaciones);
+    this.unsubscribers.push(() => supabase.removeChannel(unsubPostulaciones));
 
-    // Listener para nuevas oportunidades
-    const oportunidadesQuery = query(collection(db, 'oportunidades'));
-    
-    const unsubOportunidades = onSnapshot(oportunidadesQuery, async (snapshot) => {
-      for (const change of snapshot.docChanges()) {
-        if (change.type === 'added') {
-          const hasNotified = await this.hasNotifiedOportunidad(change.doc.id);
+    // Listener for new oportunidades
+    const unsubOportunidades = supabase
+      .channel('scheduler-oportunidades')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'oportunidades' },
+        async (payload) => {
+          const data = payload.new as { id: string; titulo: string; categoria: string };
+          const hasNotified = await this.hasNotifiedOportunidad(data.id);
           if (!hasNotified) {
-            const data = change.doc.data();
-            await this.notifyNewOportunidad(change.doc.id, data.titulo, data.categoria);
-            await this.markOportunidadAsNotified(change.doc.id);
+            await this.notifyNewOportunidad(data.id, data.titulo, data.categoria);
+            await this.markOportunidadAsNotified(data.id);
           }
         }
-      }
-    });
+      )
+      .subscribe();
 
-    this.unsubscribers.push(unsubOportunidades);
+    this.unsubscribers.push(() => supabase.removeChannel(unsubOportunidades));
   }
 
   /**
@@ -195,74 +197,45 @@ export class NotificationScheduler {
     await this.cancelAllScheduledReminders();
 
     // Obtener postulaciones activas del usuario
-    const postulacionesQuery = query(
-      collection(db, 'postulaciones'),
-      where('usuarioId', '==', this.userId),
-      where('status', 'in', ['pendiente', 'aceptada'])
-    );
+    const { data: postulaciones } = await supabase
+      .from('postulaciones')
+      .select('oportunidad_id')
+      .eq('estudiante_id', this.userId)
+      .in('estado', ['submitted', 'accepted']);
 
-    const postulacionesSnapshot = await getDocs(postulacionesQuery);
-    const oportunidadIds = postulacionesSnapshot.docs.map(doc => doc.data().oportunidadId);
+    const oportunidadIds = (postulaciones ?? []).map((p: { oportunidad_id: string }) => p.oportunidad_id);
 
     if (oportunidadIds.length === 0) return;
 
     // Obtener detalles de oportunidades
-    const oportunidadesSnapshot = await getDocs(collection(db, 'oportunidades'));
+    const { data: oportunidades } = await supabase
+      .from('oportunidades')
+      .select('id, titulo, deadline')
+      .in('id', oportunidadIds);
+
     const scheduledIds: string[] = [];
 
-    for (const oportunidadDoc of oportunidadesSnapshot.docs) {
-      if (!oportunidadIds.includes(oportunidadDoc.id)) continue;
-
-      const data = oportunidadDoc.data();
+    for (const opp of (oportunidades ?? [])) {
       const now = new Date();
 
       // Recordatorio de deadline (1 día antes)
-      if (data.fechaInscripcion) {
-        const fechaInscripcion = data.fechaInscripcion.toDate();
-        const oneDayBefore = new Date(fechaInscripcion);
+      if (opp.deadline) {
+        const deadline = new Date(opp.deadline);
+        const oneDayBefore = new Date(deadline);
         oneDayBefore.setDate(oneDayBefore.getDate() - 1);
-        oneDayBefore.setHours(9, 0, 0, 0); // 9 AM
+        oneDayBefore.setHours(9, 0, 0, 0);
 
         if (oneDayBefore > now) {
           const notificationId = await Notifications.scheduleNotificationAsync({
             content: {
               title: '⏰ Recordatorio: Deadline Mañana',
-              body: `La inscripción para ${data.titulo} cierra mañana`,
-              data: {
-                type: 'recordatorio_deadline',
-                oportunidadId: oportunidadDoc.id,
-              },
+              body: `La inscripción para ${opp.titulo} cierra mañana`,
+              data: { type: 'recordatorio_deadline', oportunidadId: opp.id },
               sound: true,
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.DATE,
               date: oneDayBefore,
-            },
-          });
-          scheduledIds.push(notificationId);
-        }
-      }
-
-      // Recordatorio de inicio (día del evento)
-      if (data.fechaInicio) {
-        const fechaInicio = data.fechaInicio.toDate();
-        const eventDay = new Date(fechaInicio);
-        eventDay.setHours(8, 0, 0, 0); // 8 AM
-
-        if (eventDay > now) {
-          const notificationId = await Notifications.scheduleNotificationAsync({
-            content: {
-              title: '📅 Recordatorio: Actividad Hoy',
-              body: `${data.titulo} comienza hoy${data.horaInicio ? ` a las ${data.horaInicio}` : ''}`,
-              data: {
-                type: 'recordatorio_inicio',
-                oportunidadId: oportunidadDoc.id,
-              },
-              sound: true,
-            },
-            trigger: {
-              type: Notifications.SchedulableTriggerInputTypes.DATE,
-              date: eventDay,
             },
           });
           scheduledIds.push(notificationId);

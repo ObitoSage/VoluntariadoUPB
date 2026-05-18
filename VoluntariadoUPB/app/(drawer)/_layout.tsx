@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useThemeColors, useUserProfile } from '../../src/hooks';
-import { useRolePermissions } from '../../src/hooks/useRolePermissions';
+import { Redirect } from 'expo-router';
+import { useThemeColors } from '../../src/hooks';
+import { useRolePermissions } from '../../src/hooks';
 import { LogoutModal } from '../../src/components';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function DrawerLayout() {
   const { colors } = useThemeColors();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { logout } = useAuthStore();
-  const { user: userProfile } = useUserProfile();
+  const { user, isLoading, logout } = useAuthStore();
   const { canManageOpportunities } = useRolePermissions();
-  const router = useRouter();
+
+  // Guard the authenticated area: as soon as the session disappears (manual
+  // logout, token expiry, password change elsewhere), kick the user back to
+  // login. isLoading covers the cold-start window before getSession resolves.
+  if (!isLoading && !user) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const handleLogoutPress = () => {
     setShowLogoutModal(true);
@@ -22,12 +27,11 @@ export default function DrawerLayout() {
   const handleConfirmLogout = async () => {
     setShowLogoutModal(false);
     try {
+      // After logout, useAuthStore sets user to null and the Redirect above
+      // takes over — no manual router.replace needed.
       await logout();
-      setTimeout(() => {
-        router.replace('/(auth)/login');
-      }, 100);
     } catch (error) {
-      console.error('Error during logout:', error);
+      if (__DEV__) console.error('Error during logout:', error);
     }
   };
 
@@ -100,7 +104,7 @@ export default function DrawerLayout() {
             drawerIcon: ({ color, size }) => (
               <Ionicons name="map" size={size} color={color} />
             ),
-            drawerItemStyle: (canManageOpportunities() || userProfile?.role === 'admin') 
+            drawerItemStyle: canManageOpportunities() 
               ? { marginTop: 20 }
               : { display: 'none', height: 0 },
           }}
